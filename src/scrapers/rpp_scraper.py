@@ -3,6 +3,7 @@ RPP Scraper - Extractor de noticias de RPP Noticias Cusco
 """
 
 from typing import List, Dict, Any
+from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 import logging
@@ -58,6 +59,7 @@ class RPPScraper(BaseScraper):
     def parse_article(self, article: Any) -> Dict[str, Any]:
         """
         Parsea un artículo individual de RPP.
+        Estructura: {titulo, enlace, fuente, tipo, fecha_scrape}
 
         Args:
             article: Elemento del HTML
@@ -66,20 +68,22 @@ class RPPScraper(BaseScraper):
             Dict[str, Any]: Artículo estructurado
         """
         try:
-            title_elem = article.find('h2')
-            title = title_elem.text.strip() if title_elem else "Sin título"
+            title_elem = article.find('h2') or article.find('h3')
+            titulo = title_elem.text.strip() if title_elem else "Sin título"
             
             url_elem = article.find('a')
-            url = url_elem['href'] if url_elem else ""
+            enlace = url_elem['href'] if url_elem and 'href' in url_elem.attrs else ""
             
-            description_elem = article.find('p', class_='description')
-            description = description_elem.text.strip() if description_elem else ""
+            # Si el enlace es relativo, convertirlo a absoluto
+            if enlace and enlace.startswith('/'):
+                enlace = "https://rpp.pe" + enlace
             
             return {
-                'title': title,
-                'description': description,
-                'url': url,
-                'source_name': self.name
+                'titulo': titulo,
+                'enlace': enlace,
+                'fuente': self.name,
+                'tipo': 'ALERTA',
+                'fecha_scrape': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
         except Exception as e:
             self.logger.error(f"Error parseando artículo: {e}")

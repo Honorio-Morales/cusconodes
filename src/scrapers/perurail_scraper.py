@@ -1,8 +1,9 @@
 """
-PeruRail Scraper - Extractor de comunicados de PeruRail
+PeruRail Scraper - Extractor de comunicados y horarios de PeruRail
 """
 
 from typing import List, Dict, Any
+from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 import logging
@@ -14,14 +15,14 @@ logger = logging.getLogger(__name__)
 
 class PeruRailScraper(BaseScraper):
     """
-    Scraper especializado para comunicados de PeruRail.
+    Scraper especializado para comunicados y horarios de PeruRail.
     Extrae información sobre cierres, cambios de horarios y avisos.
     """
 
     def __init__(self):
         """Inicializa el scraper de PeruRail"""
         super().__init__(
-            name="PeruRail Comunicados",
+            name="PeruRail Horarios",
             url="https://www.perurail.com"
         )
         self.headers = {
@@ -30,24 +31,24 @@ class PeruRailScraper(BaseScraper):
 
     def scrape(self) -> List[Dict[str, Any]]:
         """
-        Realiza el scraping de comunicados de PeruRail.
+        Realiza el scraping de horarios y comunicados de PeruRail.
 
         Returns:
-            List[Dict[str, Any]]: Lista de comunicados extraídos
+            List[Dict[str, Any]]: Lista de horarios extraídos
         """
         try:
             response = requests.get(self.url, headers=self.headers, timeout=10)
             response.raise_for_status()
             
             soup = BeautifulSoup(response.content, 'html.parser')
-            # Buscar comunicados en la estructura específica de PeruRail
-            announcements = soup.find_all('div', class_='announcement')
+            # Buscar filas de horarios en tablas
+            schedules = soup.find_all('tr', class_='schedule-row')
             
-            parsed_announcements = [self.parse_article(ann) for ann in announcements]
-            parsed_announcements = self.add_metadata(parsed_announcements)
+            parsed_schedules = [self.parse_article(schedule) for schedule in schedules]
+            parsed_schedules = self.add_metadata(parsed_schedules)
             
-            self.logger.info(f"Se extrajeron {len(parsed_announcements)} comunicados de PeruRail")
-            return parsed_announcements
+            self.logger.info(f"Se extrajeron {len(parsed_schedules)} horarios de PeruRail")
+            return parsed_schedules
             
         except requests.RequestException as e:
             self.logger.error(f"Error al conectar con PeruRail: {e}")
@@ -58,32 +59,31 @@ class PeruRailScraper(BaseScraper):
 
     def parse_article(self, article: Any) -> Dict[str, Any]:
         """
-        Parsea un comunicado individual de PeruRail.
+        Parsea un horario individual de PeruRail.
+        Estructura: {servicio, salida, llegada, ruta, fecha_scrape}
 
         Args:
-            article: Elemento del HTML
+            article: Elemento del HTML (fila de tabla)
 
         Returns:
-            Dict[str, Any]: Comunicado estructurado
+            Dict[str, Any]: Horario estructurado
         """
         try:
-            title_elem = article.find('h3')
-            title = title_elem.text.strip() if title_elem else "Sin título"
+            cells = article.find_all('td')
             
-            content_elem = article.find('p')
-            content = content_elem.text.strip() if content_elem else ""
-            
-            date_elem = article.find('span', class_='date')
-            date = date_elem.text.strip() if date_elem else ""
+            servicio = cells[0].text.strip() if len(cells) > 0 else ""
+            salida = cells[1].text.strip() if len(cells) > 1 else ""
+            llegada = cells[2].text.strip() if len(cells) > 2 else ""
+            ruta = cells[3].text.strip() if len(cells) > 3 else ""
             
             return {
-                'title': title,
-                'content': content,
-                'date': date,
-                'source_name': self.name,
-                'type': 'announcement'
+                'servicio': servicio,
+                'salida': salida,
+                'llegada': llegada,
+                'ruta': ruta,
+                'fecha_scrape': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
         except Exception as e:
-            self.logger.error(f"Error parseando comunicado: {e}")
+            self.logger.error(f"Error parseando horario: {e}")
             return {}
 

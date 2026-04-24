@@ -70,6 +70,7 @@ class BaseScraper(ABC):
     def add_metadata(self, articles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Añade metadatos a los artículos.
+        Mantiene los campos existentes sin modificarlos.
 
         Args:
             articles (List[Dict[str, Any]]): Artículos a enriquecer
@@ -78,7 +79,10 @@ class BaseScraper(ABC):
             List[Dict[str, Any]]: Artículos con metadatos
         """
         for article in articles:
-            article['source'] = self.name
-            article['scraped_at'] = datetime.now().isoformat()
+            # Solo agregar metadatos si no existen
+            if 'fuente' not in article:
+                article['fuente'] = self.name
+            if 'fecha_scrape' not in article:
+                article['fecha_scrape'] = datetime.now().isoformat()
         return articles
 

@@ -1,0 +1,751 @@
+[
+  {
+    "servicio": "03:20",
+    "salida": "Wanchaq",
+    "llegada": "",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "05:05",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "05:10",
+    "salida": "Wanchaq",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "05:40",
+    "salida": "Wanchaq",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "06:10",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "06:40",
+    "salida": "Wanchaq",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "07:05",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "07:45",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "07:50",
+    "salida": "Wanchaq",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "07:54",
+    "salida": "Hidroeléctrica",
+    "llegada": "",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "08:00",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "08:29",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "08:53",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "09:15",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "10:32",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "11:52",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "12:30",
+    "salida": "Wanchaq",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "12:55",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "13:27",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "14:50",
+    "salida": "Hidroeléctrica",
+    "llegada": "",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "15:37",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "16:30",
+    "salida": "Wanchaq",
+    "llegada": "",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "19:04",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "21:00",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "03:20",
+    "salida": "Wanchaq",
+    "llegada": "",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "05:05",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "05:10",
+    "salida": "Wanchaq",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "05:40",
+    "salida": "Wanchaq",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "06:10",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "06:40",
+    "salida": "San Pedro",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "07:05",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "07:30",
+    "salida": "San Pedro",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "07:35",
+    "salida": "Poroy",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "07:45",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "07:54",
+    "salida": "Hidroeléctrica",
+    "llegada": "",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "08:00",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "08:29",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "08:53",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "09:15",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "10:32",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "11:52",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "12:30",
+    "salida": "Wanchaq",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "12:55",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "13:27",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "14:50",
+    "salida": "Hidroeléctrica",
+    "llegada": "",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "15:37",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "16:30",
+    "salida": "Wanchaq",
+    "llegada": "",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "19:04",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "21:00",
+    "salida": "Ollantaytambo",
+    "llegada": "",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "05:35",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "06:45",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "08:53",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "10:55",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "12:46",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "13:30",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "13:37",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "13:37",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "14:55",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "14:55",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "15:20",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "15:20",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "15:20",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "15:48",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "15:48",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "16:22",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "16:22",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "16:43",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "16:43",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "17:23",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "17:23",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "18:00",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "18:10",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "18:20",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "18:20",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "20:50",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "21:50",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "05:35",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "06:45",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "08:53",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "10:55",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "12:46",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "13:30",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "13:37",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "13:37",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "14:55",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "14:55",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "15:20",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "15:20",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "15:20",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "15:48",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "15:48",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "16:22",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "16:22",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "16:43",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "16:43",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "16:43",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "17:23",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "17:23",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "17:23",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome Observatory",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "18:10",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "18:20",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "18:20",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "20:50",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "21:50",
+    "salida": "Machu Picchu Pueblo",
+    "llegada": "(Aguas Calientes)",
+    "ruta": "Expedition / Vistadome",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "07:10",
+    "salida": "Wanchaq",
+    "llegada": "",
+    "ruta": "Titicaca",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "07:50",
+    "salida": "Wanchaq",
+    "llegada": "",
+    "ruta": "Titicaca",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  },
+  {
+    "servicio": "07:30",
+    "salida": "Wanchaq",
+    "llegada": "",
+    "ruta": "Titicaca",
+    "fecha_scrape": "2026-04-24 19:22:34"
+  }
+]
