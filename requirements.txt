@@ -1,0 +1,33 @@
+# CuscoNodes Requirements
+# Sprint 2: Módulo de Percepción
+
+# Web Scraping
+beautifulsoup4==4.12.2
+requests==2.31.0
+selenium==4.15.2
+lxml==4.9.3
+
+# Data Processing
+pandas==2.1.3
+python-dotenv==1.0.0
+
+# API Integration
+openai==1.3.6
+google-generativeai==0.3.0
+
+# Database & Storage
+SQLAlchemy==2.0.23
+
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+
+# Code Quality
+black==23.12.0
+flake8==6.1.0
+pylint==3.0.3
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3
+
