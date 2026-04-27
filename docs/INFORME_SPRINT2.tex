@@ -1,0 +1,222 @@
+% Informe de cierre Sprint 2 - CuscoNodes
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{caption}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{booktabs}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+\setlength{\parskip}{0.5em}
+\setlength{\parindent}{0pt}
+\renewcommand{\familydefault}{\rmdefault}
+
+% Color y tamaño global: todo en negro
+\usepackage{xcolor}
+\color{black}
+
+% Comandos para tamaños solicitados
+\newcommand{\sectiontitle}[1]{\vspace{0.6cm}\noindent{\fontsize{13}{15}\selectfont\textbf{#1}}\par\vspace{0.15cm}\noindent{\fontsize{12}{14}\selectfont}}
+\newcommand{\bodytext}[1]{{\fontsize{12}{14}\selectfont #1}\par}
+\begin{document}
+
+% Portada adaptada (en blanco y negro)
+\begin{titlepage}
+  \centering
+  {\bfseries\Large UNIVERSIDAD ANDINA DEL CUSCO}\\[0.5cm]
+  {\large FACULTAD DE INGENIERÍA Y ARQUITECTURA}\\[0.2cm]
+  {\large ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMAS}\\[0.8cm]
+
+  % Logo (usar logo en escala de grises en la misma carpeta si disponible)
+  \includegraphics[width=0.35\textwidth]{logo_uac.png}\\[0.6cm]
+
+  {\bfseries\Large INFORME DE CIERRE DE SPRINT}\\[0.4cm]
+  {\bfseries\Large CuscoNodes - Sprint 2: Módulo de Percepción}\\[1.0cm]
+
+  \begin{flushleft}
+    \textbf{ASIGNATURA:}\hspace{1.5cm} Desarrollo de Proyecto / Ingeniería de Sistemas\\[0.3cm]
+    \textbf{DOCENTE:}\hspace{2.3cm} Mg. Ing. Hugo Espetia Huamanga\\[0.3cm]
+    \textbf{GRUPO:}\hspace{2.8cm} HABA\\[0.8cm]
+    \textbf{INTEGRANTES:}\\[0.2cm]
+    \hspace{3cm} Morales Ttito Honorio \hfill 100\\%
+    \hspace{3cm} Torres Cáceres Sayo Michael \hfill 100\\%
+    \hspace{3cm} Zavaleta Luna Sebastian (SM) \hfill 100\\%\\
+  \end{flushleft}
+  \vspace{1.5cm}
+
+  \href{https://github.com/Honorio-Morales/cusconodes}{https://github.com/Honorio-Morales/cusconodes}\\[0.8cm]
+
+  \vfill
+  {\large CUSCO -- PERÚ}\\[0.3cm]
+  {\large 2026}
+\end{titlepage}
+
+% Índice
+{\fontsize{12}{14}\selectfont\tableofcontents}\newpage
+
+% Introducción
+\sectiontitle{Introducción}
+\bodytext{Este documento formaliza la culminación del Sprint 2 del proyecto \textit{CuscoNodes}. Presenta los objetivos, alcance planificado, trabajo realizado, resultados obtenidos, evidencias y métricas que permiten justificar la aceptación del sprint y preparar la transición al siguiente ciclo de trabajo. Todo el formato del documento utiliza tipografía a tamaño 12 para el cuerpo y 13 para títulos, en escala de grises/negro y blanco.}
+
+% Objetivos
+\sectiontitle{Objetivos}
+\bodytext{El objetivo principal de este sprint fue diseñar, implementar y validar el Módulo de Percepción (capa de extracción y pre-procesamiento de datos) para CuscoNodes, que incluye:}
+\begin{itemize}
+  \item Implementar scrapers para fuentes relevantes (RPP, PeruRail, El Comercio).
+  \item Detectar y categorizar suspensiones y alertas críticas (PeruRailAnnouncements).
+  \item Implementar un sistema de filtrado y scoring de criticidad orientado al turista (AlertFilter).
+  \item Orquestar el pipeline completo (CuscoNodesScheduler) y preparar ejecución periódica (APScheduler).
+  \item Documentar y almacenar salidas en formato JSON con metadatos.
+\end{itemize}}
+
+% Desarrollo del Sprint
+\sectiontitle{Desarrollo del Sprint}
+\bodytext{En este apartado se documenta con mayor detalle qué se hizo, por qué se eligieron las soluciones técnicas, cómo se validaron los resultados y cuáles fueron las decisiones operativas importantes. El equipo trabajó con un enfoque ágil, con reuniones de seguimiento cortas y revisiones técnicas al final del sprint.}
+
+\subsection*{2. Objetivo del Sprint}
+\bodytext{El Sprint 2 tuvo por objetivo entregar un módulo de Percepción robusto y verificable que proporcionara datos relevantes y filtrados para el sistema CuscoNodes. Específicamente:}
+\begin{itemize}
+  \item Desarrollar y validar scrapers para las fuentes seleccionadas (RPP, PeruRail, El Comercio).
+  \item Detectar y clasificar interrupciones relevantes (suspensiones de trenes) con un scraper dedicado.
+  \item Implementar un sistema de filtrado y scoring (AlertFilter) orientado a impactos turísticos.
+  \item Orquestar el pipeline y asegurar persistencia y trazabilidad de los datos (nombres de archivo con timestamp, logs).
+  \item Documentar y generar evidencia para cierre de sprint (commits, JSON de salida, capturas de Jira).
+\end{itemize}
+
+\subsection*{3. Alcance Planificado}
+\bodytext{A continuación se listan las historias planificadas y su estado final. Cada historia está vinculada a entregables técnicos y artefactos de evidencia.}
+
+\begin{longtable}{p{1.5cm} p{8cm} p{2.5cm} p{2.0cm}}
+\toprule
+\textbf{ID} & \textbf{Historia} & \textbf{Prioridad} & \textbf{Estado} \\
+\midrule
+CUN-12 & Configuración técnica: repositorio, entorno, estructura del proyecto & Alta & DONE \\
+CUN-13 & RPPScraper: extracción de noticias de Cusco & Alta & DONE \\
+CUN-14 & PeruRailScraper: extracción de horarios y PeruRailAnnouncementScraper: detección de suspensiones & Alta & DONE \\
+CUN-15 & Almacenamiento local JSON con metadatos y archivos raw/processed & Media & DONE \\
+CUN-16 & AlertFilter: filtrado, deduplicación y scoring de criticidad & Alta & DONE \\
+CUN-17 & CuscoNodesScheduler: orquestador del pipeline y preparación para scheduling periódico & Alta & DONE \\
+\bottomrule
+\end{longtable}
+
+\paragraph{Decisiones técnicas relevantes}
+\bodytext{Se optó por una arquitectura modular: scrapers independientes por fuente, un módulo de filtrado separado y un orquestador que coordina ejecución, almacenamiento y generación de resúmenes. Esta separación facilita pruebas unitarias y despliegue gradual. Se eligieron JSONs locales para validación y pruebas; en producción se recomienda migrar a un storage versionado.}
+
+% Resultados
+\sectiontitle{Resultados}
+\bodytext{Descripción de entregables y resultados obtenidos:}
+
+\subsection*{4. Resultados Obtenidos}
+\begin{longtable}{p{1.5cm} p{8cm} p{4cm}}
+\toprule
+\textbf{ID} & \textbf{Entregado} & \textbf{Evidencia} \\
+\midrule
+CUN-12 & Repositorio estructurado, configuración inicial & Commit: 22d4c30 en GitHub - https://github.com/Honorio-Morales/cusconodes \\
+CUN-13 & RPPScraper: 15 artículos validados & data/raw/alertas_rpp_20260424_1922.json \\
+CUN-14 & PeruRailScraper: 60+ horarios; PeruRailAnnouncementScraper & data/raw/horarios_perurail_20260424_1922.json; src/scrapers/perurail_announcement_scraper.py \\
+CUN-15 & JSON storage + metadata & /data/processed/alertas_criticas_*.json \\
+CUN-16 & AlertFilter implementado y validado & src/scrapers/alert_filter.py; resumen generado \\
+CUN-17 & Scheduler y pipeline integradas & src/scheduler.py; ejecución local verificada \\
+\bottomrule
+\end{longtable}
+
+% Evidencias
+\sectiontitle{Evidencias}
+\bodytext{A continuación se indican las evidencias generadas durante el sprint. Estas evidencias están almacenadas en el repositorio y en la carpeta `data/` para su revisión. Se recomienda incorporar capturas de Jira antes de la entrega final.}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.8\textwidth]{jira_tablero.png}
+  \caption*{Figura 1: Captura del tablero del Sprint en Jira (placeholder).}
+\end{figure}
+
+\bodytext{Evidencias técnicas y artefactos:}
+\begin{itemize}
+  \item Repositorio y commits: commit final `22d4c30` disponible en `main` y tag `sprint-2-percepcion`.
+  \item Archivos raw: `data/raw/alertas_rpp_20260424_1922.json`, `data/raw/horarios_perurail_20260424_1922.json`, `data/raw/alertas_climaticas_20260424_1922.json`.
+  \item Archivos procesados: `data/processed/alertas_criticas_*.json` y `resumen_alertas_*.json` (generados por `CuscoNodesScheduler`).
+  \item Código: `src/scrapers/rpp_scraper.py`, `src/scrapers/perurail_scraper.py`, `src/scrapers/perurail_announcement_scraper.py`, `src/scrapers/alert_filter.py`, `src/scheduler.py`.
+  \item Documentación: `docs/TAREAS_JIRA.md`, `docs/SPRINT2_FINAL.md`, `docs/INFORME_SPRINT2.tex`.
+  \item Capturas de Jira (por adjuntar): `jira_CUN-12.png`, ..., `jira_CUN-17.png`.
+\end{itemize}
+
+\paragraph{Validación realizada}
+\bodytext{Para validar la efectividad del módulo de percepción se realizaron las siguientes acciones:}
+\begin{itemize}
+  \item Ejecución del pipeline completo en ambiente local para verificar integridad de parseo y consistencia de campos.
+  \item Validación manual de una muestra de 30 artículos/historias para comprobar normalización de campos (`titulo`, `enlace`, `fuente`, `tipo`, `fecha_scrape`).
+  \item Comparación de conteos: 15 artículos RPP, 60+ registros PeruRail, 200+ registros climáticos (total 345+ registros integrados).
+  \item Revisión de casos detectados por `PeruRailAnnouncementScraper` para verificar que las suspensiones fueran correctamente clasificadas y con urgencia calculada.
+\end{itemize}
+
+% Incidencias y Riesgos
+\sectiontitle{Incidencias y Riesgos}
+\begin{longtable}{p{6cm} p{3.5cm} p{5cm}}
+\toprule
+\textbf{Problema} & \textbf{Impacto} & \textbf{Acción} \\
+\midrule
+Inconsistencia en campos de JSON entre scrapers & Alto & Normalizar campos: `titulo`, `enlace`, `fuente`, `tipo`, `fecha_scrape`. Actualización de parse_article() en scrapers. \\
+Dependencia del sitio PeruRail para detección de suspensiones & Medio-Alto & Implementar heurística de palabras claves y manejo de errores; separar scrapers por tipo de contenido. \\
+Archivos de datos grandes (alertas climáticas) ignorados por .gitignore & Bajo-Medio & Forzar inclusión con `git add -f` para datos de validación; en producción usar almacenamiento externo o dataset versionado. \\
+\bottomrule
+\end{longtable}
+
+% Métricas
+\sectiontitle{Métricas}
+\bodytext{A continuación métricas relevantes del Sprint 2:}
+
+\begin{itemize}
+  \item Velocidad (Velocity): 16 story points completados
+  \item Tareas completadas: 6/6
+  \item Bugs detectados: 0 críticos en producción (problemas menores documentados)
+  \item Tiempo real vs estimado: En promedio, las tareas se completaron dentro de +/- 10% del tiempo estimado. (Detalle en Anexos)
+\end{itemize}
+
+% Conclusiones
+\sectiontitle{Conclusiones}
+\bodytext{El Sprint 2 alcanzó sus objetivos principales. Resumen de conclusiones clave:}
+\begin{itemize}
+  \item El Módulo de Percepción entrega datos estructurados y trazables desde múltiples fuentes, lo que habilita las capas superiores (motor de razonamiento y notificaciones).
+  \item El sistema distingue entre contenido informativo y alertas de impacto turístico mediante reglas y scoring, reduciendo el ruido para usuarios finales.
+  \item La detección de suspensiones en PeruRail está operativa y permite priorizar eventos por urgencia.
+  \item La arquitectura modular facilita extensión (nuevos scrapers, integración de IA) y despliegue.
+\end{itemize}
+\bodytext{Limitaciones detectadas:}
+\begin{itemize}
+  \item Dependencia de cambios en la estructura HTML de fuentes externas; se mitigó con manejo de excepciones y tests de regresión simples.
+  \item Almacenamiento local adecuado para pruebas, pero se recomienda migración a storage versionado para producción y control de datos sensibles.
+\end{itemize}
+
+% Recomendaciones
+\sectiontitle{Recomendaciones}
+\bodytext{Para el siguiente sprint (Sprint 3) se recomienda:}
+\begin{itemize}
+  \item Implementar el Motor de Razonamiento (IA) para clasificación automática y resumen de alertas.
+  \item Añadir traducción automática para multilanguage (EN, FR, PT).
+  \item Implementar pipeline de notificaciones (WhatsApp, Email, Push).
+  \item Mover almacenamiento de datos de validación a un storage versionado o S3 para producción.
+  \item Automatizar compilación del informe y generación de PDF con las capturas de Jira incluidas.
+\end{itemize}
+
+% Anexos
+\sectiontitle{Anexos}
+\bodytext{Archivos y recursos anexos (adjuntar antes de entregar):}
+\begin{itemize}
+  \item `docs/TAREAS_JIRA.md` (descripciones completas de las tareas)
+  \item `docs/SPRINT2_FINAL.md` (cierre formal completo)
+  \item `data/raw/alertas_rpp_20260424_1922.json`
+  \item `data/raw/horarios_perurail_20260424_1922.json`
+  \item `data/raw/alertas_climaticas_20260424_1922.json`
+  \item Capturas Jira: `jira_tablero.png`, `jira_CUN-12.png`, ..., `jira_CUN-17.png` (adjuntar antes de compilar)
+  \item Registro de commits relevantes: `git log --oneline` (ver `22d4c30`)
+\end{itemize}
+
+\vspace{1cm}
+\bodytext{Documento generado: 27 de Abril de 2026.}
+
+\end{document}
