@@ -9,6 +9,17 @@ import json
 import os
 from pathlib import Path
 
+# Sprint 3: Importar agente de razonamiento
+try:
+    from src.reasoning_agent_lite import ReasoningPipelineLite as ReasoningPipeline
+    REASONING_AVAILABLE = True
+except ImportError:
+    try:
+        from src.reasoning_agent import ReasoningPipeline
+        REASONING_AVAILABLE = True
+    except ImportError:
+        REASONING_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -102,25 +113,46 @@ class CuscoNodesScheduler:
             result['total_alerts_raw'] = len(all_alerts)
             self.logger.info(f"\n📊 Total de alertas extraídas: {len(all_alerts)}")
             
-            # Paso 2: Filtrar alertas críticas
-            critical_alerts = all_alerts
-            if alert_filter:
-                self.logger.info("\n🔍 Filtrando alertas críticas...")
-                critical_alerts = alert_filter.filter_critical_alerts(all_alerts)
-                result['total_alerts_critical'] = len(critical_alerts)
-                self.logger.info(f"✅ Alertas críticas identificadas: {len(critical_alerts)}")
+            # Paso 2: RAZONAMIENTO (Sprint 3) - Usar agente IA si disponible
+            classified_alerts = all_alerts
+            if REASONING_AVAILABLE and all_alerts:
+                try:
+                    reasoning_pipeline = ReasoningPipeline(self.data_path)
+                    classified_alerts = reasoning_pipeline.process_raw_alerts(all_alerts)
+                    result['reasoning_applied'] = True
+                    result['total_alerts_critical'] = sum(
+                        1 for a in classified_alerts if a.get('clasificacion') == 'CRÍTICA'
+                    )
+                except Exception as e:
+                    self.logger.warning(f"⚠️  Razonamiento no disponible, usando alertas raw: {e}")
+                    result['reasoning_applied'] = False
+            else:
+                result['reasoning_applied'] = False
+                # Fallback a filtrado simple si razonamiento no disponible
+                if alert_filter:
+                    self.logger.info("\n🔍 Filtrando alertas críticas (modo legacy)...")
+                    classified_alerts = alert_filter.filter_critical_alerts(all_alerts)
+                    result['total_alerts_critical'] = len(classified_alerts)
             
-            # Paso 3: Guardar datos procesados
-            if critical_alerts:
-                processed_file = self._save_processed_data(critical_alerts)
+            # Paso 3: Guardar datos procesados/clasificados
+            processed_file = None
+            if classified_alerts:
+                processed_file = self._save_processed_data(classified_alerts, use_reasoning=result['reasoning_applied'])
                 result['files_created'].append(processed_file)
+                self.logger.info(f"✅ Alertas procesadas guardadas: {len(classified_alerts)}")
             
             # Paso 4: Generar resumen
-            if alert_filter:
-                summary = alert_filter.generate_summary(critical_alerts)
+            if alert_filter and not result['reasoning_applied']:
+                summary = alert_filter.generate_summary(classified_alerts)
                 summary_file = self._save_summary(summary)
                 result['files_created'].append(summary_file)
                 self.logger.info(f"\n📋 Resumen guardado en {summary_file}")
+            elif result['reasoning_applied']:
+                # Generar resumen desde alertas clasificadas
+                summary = self._generate_reasoning_summary(classified_alerts)
+                summary_file = self._save_summary(summary)
+                result['files_created'].append(summary_file)
+                self.logger.info(f"\n📋 Resumen IA guardado en {summary_file}")
             
             self.logger.info("\n" + "="*60)
             self.logger.info("✅ Pipeline completado exitosamente")
@@ -157,24 +189,31 @@ class CuscoNodesScheduler:
         
         return filepath
 
-    def _save_processed_data(self, critical_alerts: List[Dict[str, Any]]) -> str:
+    def _save_processed_data(self, critical_alerts: List[Dict[str, Any]], use_reasoning: bool = False) -> str:
         """
         Guarda alertas procesadas/filtradas.
         
         Args:
-            critical_alerts: Alertas críticas filtradas
+            critical_alerts: Alertas críticas filtradas o clasificadas
+            use_reasoning: Si True, usa nombre para alertas clasificadas (IA)
             
         Returns:
             str: Ruta del archivo creado
         """
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"alertas_criticas_{timestamp}.json"
+        
+        # Usar nombre diferente si fueron clasificadas con IA
+        if use_reasoning:
+            filename = f"alertas_clasificadas_{timestamp}.json"
+        else:
+            filename = f"alertas_criticas_{timestamp}.json"
+        
         filepath = os.path.join(self.processed_path, filename)
         
         try:
             with open(filepath, 'w', encoding='utf-8') as f:
                 json.dump(critical_alerts, f, ensure_ascii=False, indent=2)
-            self.logger.debug(f"Alertas críticas guardadas en {filepath}")
+            self.logger.debug(f"Alertas guardadas en {filepath}")
         except Exception as e:
             self.logger.error(f"Error guardando alertas procesadas: {e}")
         
@@ -202,6 +241,37 @@ class CuscoNodesScheduler:
             self.logger.error(f"Error guardando resumen: {e}")
         
         return filepath
+
+    def _generate_reasoning_summary(self, classified_alerts: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Genera resumen ejecutivo desde alertas clasificadas por IA.
+        
+        Args:
+            classified_alerts: Alertas clasificadas por razonamiento
+            
+        Returns:
+            Dict con resumen ejecutivo
+        """
+        critica = [a for a in classified_alerts if a.get('clasificacion') == 'CRÍTICA']
+        informativa = [a for a in classified_alerts if a.get('clasificacion') == 'INFORMATIVA']
+        
+        return {
+            'timestamp': datetime.now().isoformat(),
+            'total_alertas': len(classified_alerts),
+            'alertas_criticas': len(critica),
+            'alertas_informativas': len(informativa),
+            'fuentes': list(set(a.get('fuente', 'Desconocida') for a in classified_alerts)),
+            'alertas_criticas_lista': [
+                {
+                    'titulo': a['titulo'],
+                    'fuente': a['fuente'],
+                    'ubicaciones': a.get('ubicaciones', []),
+                    'recomendacion': a.get('recomendacion', 'Notificar')
+                }
+                for a in critica[:5]  # Top 5
+            ],
+            'nota': 'Generado por Agente de Razonamiento (Sprint 3)'
+        }
 
     def get_latest_critical_alerts(self, limit: int = 10) -> List[Dict[str, Any]]:
         """
