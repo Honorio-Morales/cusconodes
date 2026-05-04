@@ -111,6 +111,40 @@
         </div>
     </header>
 
+    <!-- AGENT FLOW BAR -->
+    <div class="max-w-screen-2xl mx-auto px-4 py-3">
+        <div id="agent-flow" class="bg-white rounded-xl shadow-sm border border-stone-200 p-4 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-cusco-terracotta flex items-center justify-center text-white shadow-md">
+                    <i class="fa-solid fa-microchip"></i>
+                </div>
+                <div>
+                    <div class="text-sm font-semibold">Pipeline Agéntico</div>
+                    <div class="text-xs text-stone-500">Percepción → Razonamiento → Acción</div>
+                </div>
+            </div>
+
+            <div class="flex gap-4 flex-1 justify-end" style="min-width:420px">
+                <div class="text-center">
+                    <div class="text-xs text-stone-500">Percepción</div>
+                    <div id="count-perception" class="text-lg font-bold text-stone-900">—</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-xs text-stone-500">Razonamiento</div>
+                    <div id="count-reasoning" class="text-lg font-bold text-stone-900">—</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-xs text-stone-500">Acción</div>
+                    <div id="count-action" class="text-lg font-bold text-stone-900">—</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-xs text-stone-500">Última ejecución</div>
+                    <div id="last-run" class="text-sm text-stone-600">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MAIN CONTENT -->
     <div class="max-w-screen-2xl mx-auto w-full flex-1 flex flex-col lg:flex-row gap-6 p-4 sm:p-6">
 
