@@ -2,6 +2,8 @@
 
 ## Pipeline Agéntico de Percepción (Sprint 2)
 
+**Estado:** Sprint 2 completado y consolidado. Esta arquitectura es la base que alimenta Sprint 3.
+
 ### Diagrama del Flujo
 
 ```
@@ -62,6 +64,18 @@
 - Extrae: cambios de horarios, cierres, avisos operacionales
 - Crítico para turistas que toman el tren
 
+#### 4. PeruRailAnnouncementScraper
+- Especializado en anuncios y suspensiones operacionales
+- Complementa el scraping de horarios para detectar interrupciones
+
+#### 5. AlertFilter
+- Filtra alertas relevantes para turismo
+- Aplica deduplicación, scoring y clasificación por urgencia
+
+#### 6. CuscoNodesScheduler
+- Orquesta el pipeline completo
+- Ejecuta scraping, filtrado y almacenamiento en una sola corrida
+
 ### Estructura de Datos JSON
 
 ```json
@@ -82,6 +96,7 @@
 3. **Parseo**: Estructurar datos extraídos
 4. **Almacenamiento**: Guardar en `/data/raw/*.json`
 5. **Metadatos**: Agregar timestamp y fuente
+6. **Procesamiento**: Filtrar alertas críticas y guardar salida en `/data/processed/`
 
 ---
 
@@ -90,4 +105,5 @@
 - Integración con OpenAI/Gemini API
 - Clasificación de incidentes por urgencia
 - Filtrado automático de noticias irrelevantes
+- Traducción multilingüe y notificaciones
 

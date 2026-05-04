@@ -23,6 +23,9 @@
 - [x] `PeruRailScraper` - Scraper para PeruRail
 - [x] `Settings` - Gestión de configuración centralizada
 - [x] `main.py` - Orquestador principal
+- [x] `PeruRailAnnouncementScraper` - Scraper de comunicados/suspensiones
+- [x] `AlertFilter` - Filtrado y scoring de alertas
+- [x] `CuscoNodesScheduler` - Orquestación continua del pipeline
 
 ### Testing
 - [x] Suite básica de pruebas pytest
@@ -31,17 +34,17 @@
 ### Documentación
 - [x] README.md con instrucciones de instalación
 - [x] ARCHITECTURE.md con diagrama del sistema
+- [x] SPRINT2_FINAL.md con cierre consolidado
 
 ---
 
 ## Tareas Pendientes ⏳
 
-### Durante Sprint 2 (Semana 2)
-- [ ] Refinar selectores CSS/XPath para RPP Noticias
-- [ ] Refinar selectores CSS/XPath para PeruRail
-- [ ] Ejecutar y validar scrapers en entorno real
-- [ ] Agregar manejo de excepciones más robusto
-- [ ] Agregar retry logic para conexiones fallidas
+### Sprint 3 y posteriores
+- [ ] Integración con motor de razonamiento por IA
+- [ ] Clasificación semántica de alertas
+- [ ] Traducción multilingüe
+- [ ] Notificaciones multicanal
 
 ### Testing Ampliado
 - [ ] Tests de parseo de artículos
@@ -94,6 +97,12 @@ pytest --cov=src tests/  # Con coverage
 - **Patrón de diseño:** Abstract Base Class (ABC) para extensibilidad
 - **Almacenamiento:** JSON local (escalable a DB en Sprint 5)
 - **Logging:** Centralizado con módulo `logging` estándar
+
+---
+
+## Estado Consolidado del Sprint 2
+
+Sprint 2 quedó cerrado con los componentes de percepción, filtrado, almacenamiento y scheduling funcionando sobre datos reales. La base está lista para arrancar Sprint 3 sin trabajo estructural adicional en la capa de percepción.
 
 ---
 

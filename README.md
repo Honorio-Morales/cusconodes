@@ -80,9 +80,25 @@ cp .env.example .env
 ### Tareas Completadas
 - [x] Estructura del proyecto creada
 - [x] Configuración del entorno Python
-- [ ] Scraper para RPP Noticias Cusco
-- [ ] Scraper para comunicados de PeruRail
-- [ ] Base de datos local en formato JSON
+- [x] Scraper para RPP Noticias Cusco
+- [x] Scraper para comunicados de PeruRail
+- [x] Base de datos local en formato JSON
+- [x] Filtrado de alertas críticas con scoring y deduplicación
+- [x] Scheduler para ejecución continua
+
+### Estado Consolidado
+
+Sprint 2 está **completado al 100%**. El módulo de percepción ya integra scraping, almacenamiento, filtrado y programación de ejecución, con datos reales validados y documentación de cierre disponible.
+
+### Listo para Sprint 3
+
+La base técnica necesaria para continuar ya está presente:
+- datos reales en `data/raw/`
+- alertas procesadas en `data/processed/`
+- `AlertFilter` para clasificación inicial
+- `CuscoNodesScheduler` para orquestación
+- tests básicos y estructura de configuración
+- documentación de cierre en `docs/SPRINT2_FINAL.md`
 
 ---
 
@@ -100,7 +116,7 @@ cp .env.example .env
 ## 📅 Timeline
 
 - **Sprint 1:** Iniciación y Planificación ✅ (Finalizado)
-- **Sprint 2:** Módulo de Percepción ⏳ (En Curso)
+- **Sprint 2:** Módulo de Percepción ✅ (Finalizado)
 - **Sprint 3:** Motor de Razonamiento
 - **Sprint 4:** Acción y Comunicación
 - **Sprint 5:** Integración y Panel de Administración
