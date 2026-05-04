@@ -1,0 +1,139 @@
+% Informe de cierre Sprint 3 - CuscoNodes
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{caption}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{booktabs}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+\setlength{\parskip}{0.5em}
+\setlength{\parindent}{0pt}
+\renewcommand{\familydefault}{\rmdefault}
+\usepackage{xcolor}
+\color{black}
+\newcommand{\sectiontitle}[1]{\vspace{0.6cm}\noindent{\fontsize{13}{15}\selectfont\textbf{#1}}\par\vspace{0.15cm}\noindent{\fontsize{12}{14}\selectfont}}
+\newcommand{\bodytext}[1]{{\fontsize{12}{14}\selectfont #1}\par}
+\begin{document}
+
+% Portada
+\begin{titlepage}
+  \centering
+  {\bfseries\Large UNIVERSIDAD ANDINA DEL CUSCO}\\[0.5cm]
+  {\large FACULTAD DE INGENIERÍA Y ARQUITECTURA}\\[0.2cm]
+  {\large ESCUELA PROFESIONAL DE INGENIERÍA DE SISTEMAS}\\[0.8cm]
+
+  % Logo (opcional)
+  \includegraphics[width=0.35\textwidth]{logo_uac.png}\\[0.6cm]
+
+  {\bfseries\Large INFORME DE CIERRE DE SPRINT}\\[0.4cm]
+  {\bfseries\Large CuscoNodes - Sprint 3: Motor de Razonamiento}\\[1.0cm]
+
+  \begin{flushleft}
+    \textbf{ASIGNATURA:}\hspace{1.5cm} Desarrollo de Proyecto / Ingeniería de Sistemas\\[0.3cm]
+    \textbf{DOCENTE:}\hspace{2.3cm} Mg. Ing. Hugo Espetia Huamanga\\[0.3cm]
+    \textbf{GRUPO:}\hspace{2.8cm} HABA\\[0.8cm]
+    \textbf{INTEGRANTES:}\\[0.2cm]
+    \hspace{3cm} Morales Ttito Honorio \hfill 100\\%
+    \hspace{3cm} Torres Cáceres Sayo Michael \hfill 100\\%
+    \hspace{3cm} Zavaleta Luna Sebastian (SM) \hfill 100\\%\\
+  \end{flushleft}
+  \vspace{1.5cm}
+
+  \href{https://github.com/Honorio-Morales/cusconodes}{https://github.com/Honorio-Morales/cusconodes}\\[0.8cm]
+
+  \vfill
+  {\large CUSCO -- PERÚ}\\[0.3cm]
+  {\large 2026}
+\end{titlepage}
+
+% Índice
+{\fontsize{12}{14}\selectfont\tableofcontents}\newpage
+
+% Introducción
+\sectiontitle{Introducción}
+\bodytext{Este documento presenta el cierre formal del Sprint 3 del proyecto \textit{CuscoNodes}. Describe objetivos, trabajo realizado, resultados técnicos, evidencias y recomendaciones para la transición al Sprint 4 (Acción: traducción y notificaciones).}
+
+% Objetivos
+\sectiontitle{Objetivos}
+\bodytext{El objetivo principal del Sprint 3 fue diseñar, implementar e integrar un Motor de Razonamiento local que clasifique alertas por urgencia y genere recomendaciones, evitando dependencias externas pesadas.}
+\begin{itemize}
+  \item Implementar un clasificador local (sklearn) para urgencia (CRÍTICA/INFORMATIVA/IRRELEVANTE).
+  \item Detectar ubicaciones turísticas y tipos de eventos relevantes para Cusco.
+  \item Integrar el Motor de Razonamiento en el pipeline existente (Percepción → Razonamiento → Almacenamiento).
+  \item Proveer una salida JSON consumible por la interfaz web y por futuros módulos de traducción/notificación.
+\end{itemize}
+
+% Desarrollo del Sprint
+\sectiontitle{Desarrollo del Sprint}
+\bodytext{Se optó por una implementación "lite" con scikit-learn (TfidfVectorizer + MultinomialNB) para asegurar ejecución local, rapidez y reproducibilidad. El agente fue entrenado inicialmente con ejemplos sintéticos contextualizados al dominio turístico de Cusco y evaluado con 1193 alertas reales de Sprint 2.}
+
+\subsection*{Arquitectura implementada}
+\bodytext{El Motor de Razonamiento se ubica como segunda etapa del pipeline:}
+\begin{itemize}
+  \item Etapa 1 - Percepción: Scrapers (Sprint 2)
+  \item Etapa 2 - Razonamiento: `ReasoningAgentLite` (Sprint 3)
+  \item Etapa 3 - Acción: (Sprint 4 planificado)
+\end{itemize}
+
+% Resultados
+\sectiontitle{Resultados}
+\bodytext{Resumen de resultados obtenidos durante validaciones y pruebas locales.}
+\begin{longtable}{p{6cm} p{8cm}}
+\toprule
+\textbf{Entrega} & \textbf{Evidencia / Notas} \\
+\midrule
+Agente de Razonamiento Ligero & `src/reasoning_agent_lite.py` (Tfidf + MultinomialNB) \\
+Integración en Scheduler & `src/scheduler.py` actualizado; salida en `/data/processed/alertas_clasificadas_*.json` \\
+Servidor demo web local & `web_server.py` exponiendo `/api/alerts/latest` \\
+Demostración con datos reales & `sprint3_reasoning_demo.py` procesó 1193 alertas en <1s \\
+Documentación de cierre & `docs/SPRINT3_FINAL.md`, `docs/INFORME_SPRINT3.tex` \\
+\bottomrule
+\end{longtable}
+
+\subsection*{Estadísticas de clasificación}
+\bodytext{En la ejecución de prueba con 1193 alertas reales:}
+\begin{itemize}
+  \item CRÍTICA: 1179 (98.8%)
+  \item INFORMATIVA: 13 (1.1%)
+  \item IRRELEVANTE: 1 (0.1%)
+\end{itemize}
+
+% Evidencias
+\sectiontitle{Evidencias}
+\bodytext{Archivos generados y artefactos relevantes:}
+\begin{itemize}
+  \item `data/processed/alertas_clasificadas_demo_*.json` (salida del pipeline)
+  \item `src/reasoning_agent_lite.py`, `src/reasoning_agent.py` (full/optional)
+  \item `web/index.html` actualizado con panel de flujo y `web_server.py` para demo local
+  \item Logs de ejecución: `sprint3_reasoning_demo.py` (registro de procesamiento)
+\end{itemize}
+
+% Incidencias y Riesgos
+\sectiontitle{Incidencias y Riesgos}
+\bodytext{Limitaciones detectadas durante el sprint:}
+\begin{itemize}
+  \item El clasificador inicial está entrenado con un set reducido (18 ejemplos); requiere re-entrenamiento con datos validados para mejorar balance y reducir bias.
+  \item Dependencia futura en servicios de traducción y notificación (Sprint 4) que puede requerir claves/servicios externos.
+  \item Cambios en estructuras HTML de fuentes externas pueden afectar scrapers (riesgo mitigado con tests y manejo de excepciones).
+\end{itemize}
+
+% Recomendaciones
+\sectiontitle{Recomendaciones}
+\bodytext{Para el Sprint 4 se recomienda:}
+\begin{itemize}
+  \item Implementar motor de traducción local/ligero o integrar solución cloud según disponibilidad.
+  \item Diseñar e integrar un módulo de notificaciones (WhatsApp Business API + SMTP) con colas y reintentos.
+  \item Construir dataset de entrenamiento con alertas validadas manualmente y reentrenar el clasificador.
+  \item Conectar `web/index.html` con endpoint `/api/alerts/latest` y preparar pruebas de integración end-to-end.
+\end{itemize}
+
+\vspace{1cm}
+\bodytext{Documento generado: 4 de Mayo de 2026.}
+
+\end{document}
