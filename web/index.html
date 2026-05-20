@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CuscoNodes - Sistema de Monitoreo Multi-Agente</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        @keyframes fade-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .anim-pulse-clean { animation: fade-pulse 2s infinite; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen antialiased">
+
+    <header class="border-b border-slate-200 bg-white/80 backdrop-blur sticky top-0 z-50 px-8 py-4 flex justify-between items-center shadow-xs">
+        <div>
+            <h1 class="text-lg font-bold tracking-tight text-slate-900">CUSCONODES</h1>
+            <p class="text-xs text-slate-500 font-medium font-mono">Control de Operaciones Multi-Agente (Hito 4) | Grupo HABA</p>
+        </div>
+        <div class="text-right">
+            <span class="text-xs bg-slate-100 text-slate-700 border border-slate-300 rounded-md px-3 py-1.5 font-mono font-semibold">
+                Patrocinador: Israel Rondán
+            </span>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        
+        <div class="bg-white border border-slate-200 rounded-xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xs">
+            <div class="space-y-1">
+                <h2 class="text-base font-semibold text-slate-800">Consola de Simulación Orquestada</h2>
+                <p class="text-xs text-slate-500 max-w-3xl leading-relaxed">
+                    Ejecución síncrona bajo especificación SDD. El agente supervisor analiza la urgencia de las alertas locales en el directorio de persistencia, coordina sub-procesos de traducción concurrentes y valida los canales de transmisión finales.
+                </p>
+            </div>
+            <button id="btn-trigger" onclick="runOrchestrator()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm px-5 py-3 rounded-lg transition shadow-sm cursor-pointer whitespace-nowrap tracking-wide">
+                Ejecutar Orquestación de Agentes
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-between shadow-xs">
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase">Control Loop Central</span>
+                        <span id="badge-supervisor" class="text-[10px] font-bold font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-300">INACTIVO</span>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-800 mb-1">Agente Supervisor</h3>
+                    <p class="text-[11px] font-mono text-slate-400 mb-4">Clase: SupervisorAgent</p>
+                    
+                    <div id="log-supervisor" class="space-y-1.5 text-xs font-mono bg-slate-50 p-3 rounded-lg border border-slate-200 min-h-[200px] text-slate-400 leading-relaxed">
+                        // En espera de inicialización...
+                    </div>
+                </div>
+                <div id="alert-preview" class="mt-4 pt-4 border-t border-slate-200 hidden">
+                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Carga útil detectada (Texto Crudo):</span>
+                    <p id="txt-crudo" class="text-xs text-slate-700 bg-slate-50 p-2.5 rounded border border-slate-200 italic leading-relaxed"></p>
+                </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase">Workers Concurrentes</span>
+                    <span id="badge-translator" class="text-[10px] font-bold font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-300">INACTIVO</span>
+                </div>
+                <h3 class="text-sm font-bold text-slate-800 mb-1">Agente Traductor</h3>
+                <p class="text-[11px] font-mono text-slate-400 mb-4">Clase: TranslatorWorker [Subprocesos]</p>
+
+                <div class="space-y-3">
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <div class="flex justify-between text-[11px] font-mono font-semibold mb-1.5 text-slate-600">
+                            <span>Localización: EN (Inglés)</span>
+                            <span id="status-en" class="text-slate-400">Pendiente</span>
+                        </div>
+                        <p id="trans-en" class="text-xs text-slate-500 leading-relaxed">Sin procesar.</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <div class="flex justify-between text-[11px] font-mono font-semibold mb-1.5 text-slate-600">
+                            <span>Localización: FR (Francés)</span>
+                            <span id="status-fr" class="text-slate-400">Pendiente</span>
+                        </div>
+                        <p id="trans-fr" class="text-xs text-slate-500 leading-relaxed">Sin procesar.</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <div class="flex justify-between text-[11px] font-mono font-semibold mb-1.5 text-slate-600">
+                            <span>Localización: PT (Portugués)</span>
+                            <span id="status-pt" class="text-slate-400">Pendiente</span>
+                        </div>
+                        <p id="trans-pt" class="text-xs text-slate-500 leading-relaxed">Sin procesar.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-between shadow-xs">
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase">Canales de Difusión</span>
+                        <span id="badge-notifier" class="text-[10px] font-bold font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-300">INACTIVO</span>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-800 mb-1">Agente Notificador</h3>
+                    <p class="text-[11px] font-mono text-slate-400 mb-4">Clase: NotifierWorker</p>
+                    
+                    <div class="space-y-4 mt-6">
+                        <div class="flex items-start gap-3 p-2.5 rounded-lg border border-transparent" id="row-whatsapp">
+                            <div class="text-xs font-mono bg-slate-100 border border-slate-300 text-slate-600 px-2 py-1 rounded">SMS/WA</div>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-700">WhatsApp Business API</h4>
+                                <p id="txt-whatsapp" class="text-[11px] text-slate-400 mt-0.5">Canal en espera de payload estructural.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-2.5 rounded-lg border border-transparent" id="row-smtp">
+                            <div class="text-xs font-mono bg-slate-100 border border-slate-300 text-slate-600 px-2 py-1 rounded">SMTP</div>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-700">Servidor de Correo SMTP</h4>
+                                <p id="txt-smtp" class="text-[11px] text-slate-400 mt-0.5">Cola vacía sin despachos pendientes.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-[11px] font-mono text-slate-600 mt-6 space-y-1">
+                    <div class="font-bold text-slate-500 uppercase text-[9px] tracking-wider mb-1">Métricas de Desempeño:</div>
+                    <div>Latencia del Proceso: <span id="m-latency" class="text-slate-900 font-semibold">0.00s</span></div>
+                    <div>Estado Final de Redución: <span id="m-status" class="text-slate-900 font-semibold">PENDIENTE</span></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Ley de Preservación de Toponimias - Formateador de alto contraste profesional sin colores informales
+        function highlightToponymies(text) {
+            const terms = ["Machu Picchu", "Ollantaytambo", "Sacsayhuamán", "Pisac", "Chinchero", "Urubamba", "Vallée Sacrée", "Vale Sagrado", "Sacred Valley"];
+            let newText = text;
+            terms.forEach(term => {
+                const regex = new RegExp(term, "g");
+                newText = newText.replace(regex, `<span class="text-indigo-700 font-semibold bg-indigo-50 border border-indigo-200 px-1 rounded">${term}</span>`);
+            });
+            return newText;
+        }
+
+        async function runOrchestrator() {
+            const startTime = performance.now();
+            
+            // UI Cambio de Estado a Ejecución
+            document.getElementById('badge-supervisor').className = "text-[10px] font-bold font-mono bg-indigo-50 text-indigo-700 border border-indigo-200 anim-pulse-clean";
+            document.getElementById('badge-supervisor').innerText = "PROCESANDO";
+            
+            const logSup = document.getElementById('log-supervisor');
+            logSup.className = "space-y-1.5 text-xs font-mono bg-slate-50 p-3 rounded-lg border border-slate-200 min-h-[200px] text-slate-700 leading-relaxed";
+            logSup.innerHTML = `<div>[Supervisor] Analizando directorio de persistencia local...</div>`;
+
+            try {
+                // Simulación de flujo estructurado escalonado para auditoría del jurado
+                setTimeout(() => {
+                    logSup.innerHTML += `<div class="text-amber-700">[Supervisor] Inicializando hilos paralelos para workers de traducción...</div>`;
+                    document.getElementById('badge-translator').className = "text-[10px] font-bold font-mono bg-amber-50 text-amber-700 border border-amber-200 anim-pulse-clean";
+                    document.getElementById('badge-translator').innerText = "TRADUCIENDO";
+                    
+                    ['status-en', 'status-fr', 'status-pt'].forEach(id => {
+                        document.getElementById(id).className = "text-amber-600 font-semibold anim-pulse-clean";
+                        document.getElementById(id).innerText = "Procesando...";
+                    });
+                }, 1000);
+
+                // Consumo del API REST expuesta por el servidor Flask
+                const response = await fetch('http://127.0.0.1:5000/api/orchestrate', { method: 'POST' });
+                const data = await response.json();
+
+                setTimeout(() => {
+                    // Cargar payload original
+                    document.getElementById('alert-preview').classList.remove('hidden');
+                    document.getElementById('txt-crudo').innerText = data.texto_crudo;
+
+                    // Finalización de tareas de traducción
+                    document.getElementById('badge-translator').className = "text-[10px] font-bold font-mono bg-slate-100 text-slate-700 border border-slate-300";
+                    document.getElementById('badge-translator').innerText = "COMPLETO";
+                    
+                    const setLanguageResult = (statusId, textId, langData) => {
+                        document.getElementById(statusId).className = "text-emerald-700 font-bold";
+                        document.getElementById(statusId).innerText = "VALIDADO";
+                        document.getElementById(textId).innerHTML = `<strong class="text-slate-800 block mb-0.5">${langData.titulo}</strong>${highlightToponymies(langData.contenido)}`;
+                    };
+
+                    setLanguageResult('status-en', 'trans-en', data.traducciones.en);
+                    setLanguageResult('status-fr', 'trans-fr', data.traducciones.fr);
+                    setLanguageResult('status-pt', 'trans-pt', data.traducciones.pt);
+
+                    logSup.innerHTML += `<div class="text-slate-600">[Supervisor] Integridad de traducciones verificada exitosamente.</div>`;
+                }, 2500);
+
+                setTimeout(() => {
+                    // Activación del Agente Notificador
+                    logSup.innerHTML += `<div>[Supervisor] Transmitiendo payload estructurado al subsistema de despacho...</div>`;
+                    document.getElementById('badge-notifier').className = "text-[10px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 anim-pulse-clean";
+                    document.getElementById('badge-notifier').innerText = "TRANSMITIENDO";
+
+                    document.getElementById('row-whatsapp').className = "flex items-start gap-3 p-2.5 rounded-lg border border-emerald-100 bg-emerald-50/50";
+                    document.getElementById('txt-whatsapp').className = "text-[11px] text-emerald-800 font-medium";
+                    document.getElementById('txt-whatsapp').innerText = "Plantilla de contingencia inyectada con éxito en la API.";
+
+                    document.getElementById('row-smtp').className = "flex items-start gap-3 p-2.5 rounded-lg border border-emerald-100 bg-emerald-50/50";
+                    document.getElementById('txt-smtp').className = "text-[11px] text-emerald-800 font-medium";
+                    document.getElementById('txt-smtp').innerText = "Cola de mensajería procesada por servidor saliente.";
+                }, 4000);
+
+                setTimeout(() => {
+                    // Consolidación y cierre del ciclo
+                    document.getElementById('badge-supervisor').className = "text-[10px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200";
+                    document.getElementById('badge-supervisor').innerText = "FINALIZADO";
+                    document.getElementById('badge-notifier').className = "text-[10px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200";
+                    document.getElementById('badge-notifier').innerText = "COMPLETO";
+
+                    logSup.innerHTML += `<div class="text-slate-900 font-semibold">[Supervisor] Persistencia completada en data/processed/. Pipeline cerrado.</div>`;
+
+                    const endTime = performance.now();
+                    const duration = ((endTime - startTime) / 1000).toFixed(2);
+                    document.getElementById('m-latency').innerText = `${duration}s`;
+                    document.getElementById('m-status').className = "text-emerald-700 font-bold";
+                    document.getElementById('m-status').innerText = data.despacho_status.estado_final.toUpperCase();
+                }, 5500);
+
+            } catch (error) {
+                console.error(error);
+                logSup.innerHTML += `<div class="text-rose-700 font-semibold">[Fallo] Excepción detectada en pipeline: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

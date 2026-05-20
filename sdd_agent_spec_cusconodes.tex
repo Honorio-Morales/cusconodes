@@ -1,0 +1,2522 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{times}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tabularx}
+
+\geometry{top=2.54cm, bottom=2.54cm, left=2.54cm, right=2.54cm}
+\renewcommand{\rmdefault}{ptm}
+\renewcommand{\sfdefault}{phv}
+\renewcommand{\baselinestretch}{1.08}
+\setlength{\parindent}{0.5cm}
+\setlength{\parskip}{0.4cm}
+
+\definecolor{criticolor}{RGB}{180,0,0}
+\definecolor{medio}{RGB}{30,100,180}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\small SRS Qurakuna APP v5.2}
+\lhead{\small ISO/IEC/IEEE 29148:2018}
+\rfoot{\small P\'agina \thepage}
+\lfoot{\small UAC -- Fondos Concursables 2025-I}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue,
+  pdftitle={SRS Qurakuna APP v5.2}
+}
+
+\newcommand{\criticomark}{\textcolor{criticolor}{\textbf{[CR\'ITICO]}}}
+\newcommand{\inferido}{\textcolor{medio}{\textit{[INFERIDO]}}}
+
+\title{
+  \textbf{Especificaci\'on de Requerimientos de Software (SRS)\\
+  para el Sistema \textit{Qurakuna APP}}\\[0.5em]
+  \large Versi\'on 5.2 -- Basado en ISO/IEC/IEEE 29148:2018
+}
+\author{
+  Universidad Andina del Cusco (UAC)\\
+  Proyecto de Investigaci\'on -- Fondos Concursables 2025-I
+}
+\date{Mayo 2026}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\begin{center}
+\small
+\begin{tabular}{|c|c|p{6.5cm}|c|}
+\hline
+\textbf{Versi\'on} & \textbf{Fecha} & \textbf{Cambios principales} & \textbf{Autor} \\
+\hline
+1.0 & 20/03/2026 & Versi\'on inicial (m\'odulos 1--3) & Equipo UAC \\
+\hline
+2.0 & 23/03/2026 & M\'odulos 4--9, matriz de trazabilidad, RBAC, Actor 4, RNF cuantificados & Equipo UAC \\
+\hline
+3.0 & 24/03/2026 & RF-017 eliminado, RF-016 reubicado, RNF-013 elevado, RNF-018 por especie & Equipo UAC \\
+\hline
+4.0 & 28/03/2026 & Modelo de datos normalizado, token\_local, merge RF-026, umbral Laplaciano remoto & Equipo UAC \\
+\hline
+5.0 & 14/04/2026 & CR-01 a CR-06: 11 atributos Ochoa, fallback GPS, purga fotos, zoom offline, OTA resumable, RNF-020 bater\'ia & Equipo UAC \\
+\hline
+5.1 & 22/04/2026 & Sistema h\'ibrido app+web; flujo asistido RF-049/050/051; mapa de calor; 16 especies; nueva especie & Equipo UAC \\
+\hline
+5.2 & 26/04/2026 & Roles clarificados (4 actores: Guardaparque, Validador, Bot\'anico, Administrador); stack web Node.js+Express confirmado; mapa de observaciones simple en app y web reemplaza mapa de calor; RF-046 web integrado; RNF interoperabilidad y paleta corporativa; Ap\'endice A actualizado & Equipo UAC \\
+\hline
+5.2-rev1 & 09/05/2026 & Hardware: RAM como piso tecnológico; RF-003: cifrado de token con Keystore; nuevos RF-059 (Edge AI <2s), RNF-023 (cuantización Int8, <150 MB RAM), RF-060 (cola de sincronización asíncrona); arquitectura Offline-First explícita; matriz trazabilidad actualizada & Equipo UAC \\
+\hline
+\end{tabular}
+\end{center}
+
+\newpage
+\tableofcontents
+\newpage
+
+%=============================================================
+\section{Introducci\'on}
+%=============================================================
+
+\subsection{Prop\'osito del documento}
+
+El presente documento define los requerimientos de software del sistema \textbf{Qurakuna APP} conforme al est\'andar \textbf{ISO/IEC/IEEE 29148:2018} y las categor\'ias de calidad de \textbf{ISO/IEC 25010:2011}. El sistema comprende dos componentes interoperables:
+
+\begin{itemize}
+  \item \textbf{Aplicaci\'on m\'ovil Android (campo):} para guardaparques del SERNANP, con funcionamiento offline-first.
+  \item \textbf{Plataforma web (gesti\'on):} para Validadores, Bot\'anicos y el Administrador, con acceso desde navegador.
+\end{itemize}
+
+Ambos componentes comparten un \'unico \textbf{API Backend (Node.js + Express + PostgreSQL)} que act\'ua como n\'ucleo conector y fuente de verdad centralizada.
+
+Este documento est\'a dirigido a:
+\begin{itemize}
+  \item \textbf{Equipo de desarrollo:} Estudiantes de Ingenier\'ia de Sistemas de la UAC.
+  \item \textbf{Investigadores y asesores:} Responsable de investigaci\'on y asesora Ing. Gabriela Zu\~niga Rojas.
+  \item \textbf{Personal del SERNANP:} Guardaparques, Validadores, Bot\'anico y Administrador.
+  \item \textbf{Direcci\'on de Gesti\'on de la Investigaci\'on UAC:} Entidad evaluadora y financiadora.
+\end{itemize}
+
+\subsection{Alcance del sistema}
+
+\textbf{Componente 1 -- App m\'ovil Android (campo):}
+\begin{itemize}
+  \item Identificaci\'on offline de las 16 especies de orqu\'ideas del SHMP mediante CNN embebida.
+  \item Flujo asistido cuando la confianza del modelo es insuficiente: recomendaci\'on de nueva foto, preguntas guiadas, reporte de especie no identificada.
+  \item Cat\'alogo de 16 especies con fichas completas (11 atributos Ochoa + atributos visuales).
+  \item Registro de observaciones con informaci\'on biol\'ogica de campo y georreferenciaci\'on.
+  \item Mapa de observaciones b\'asico con puntos georreferenciados y zonas de inter\'es del SHMP.
+  \item Sincronizaci\'on diferida con el API Backend al recuperar conexi\'on.
+\end{itemize}
+
+\textbf{Componente 2 -- Plataforma web (gesti\'on):}
+\begin{itemize}
+  \item Dashboard de validaci\'on para el Validador (Especialista en RRNN).
+  \item Edici\'on del cat\'alogo y revisi\'on de reportes de especie desconocida para el Bot\'anico.
+  \item Gesti\'on de cuentas de usuario, actualizaci\'on OTA del modelo y administraci\'on general para el Administrador.
+  \item Mapa de observaciones interactivo con capas de zonas de inter\'es y puestos de control.
+  \item Reportes exportables en PDF.
+\end{itemize}
+
+\textbf{Componente 3 -- API Backend (Node.js + Express + PostgreSQL):}
+\begin{itemize}
+  \item N\'ucleo conector que recibe peticiones de la app m\'ovil y de la plataforma web.
+  \item Expone \textit{endpoints} REST con estructuras JSON compatibles con la app m\'ovil.
+  \item Gesti\'on de autenticaci\'on JWT, autorizaci\'on RBAC y cifrado de contrase\~nas con Bcrypt.
+\end{itemize}
+
+\textbf{Fuera del alcance:} iOS, funcionalidades colaborativas para turistas, integraci\'on en tiempo real con sistemas externos del SERNANP, entrenamiento continuo autom\'atico desde la app.
+
+\subsection{Definiciones, acr\'onimos y abreviaciones}
+
+\begin{longtable}{|p{3.2cm}|p{11.3cm}|}
+\hline
+\textbf{T\'ermino} & \textbf{Definici\'on} \\
+\hline
+\endhead
+\textbf{Accuracy} & Proporci\'on de identificaciones correctas sobre el total. M\'etrica objetivo 85\% (RNF-018). \\
+\hline
+API & Application Programming Interface. Interfaz REST JSON del backend Node.js. \\
+\hline
+CNN & Red Neuronal Convolucional. Motor de identificaci\'on de las 16 especies en TF Lite. \\
+\hline
+CRISP-DM & Cross-Industry Standard Process for Data Mining. Marco metodol\'ogico del proyecto. \\
+\hline
+\textbf{Degradaci\'on Elegante} & El sistema ofrece la mejor alternativa disponible (ej. GPS $>$10m) sin bloquear al usuario. \\
+\hline
+GPS & Global Positioning System. \\
+\hline
+Ground truth & Datos validados por el Bot\'anico para entrenamiento y evaluaci\'on del modelo. \\
+\hline
+IUCN & International Union for Conservation of Nature. \\
+\hline
+JWT & JSON Web Token. Mecanismo de autenticaci\'on entre clientes (app, web) y API. \\
+\hline
+\textbf{Labelo} & P\'etalo modificado de las orqu\'ideas; elemento clave de identificaci\'on morfol\'ogica. \\
+\hline
+OTA & Over-The-Air. Actualizaci\'on del modelo CNN sin reinstalar la APK. \\
+\hline
+RBAC & Role-Based Access Control. Control de acceso por rol. \\
+\hline
+RF & Requerimiento Funcional. \\
+\hline
+RNF & Requerimiento No Funcional. \\
+\hline
+\textbf{Resumabilidad} & Capacidad de una descarga de reanudar desde el punto de interrupci\'on. \\
+\hline
+SHMP & Santuario Hist\'orico de Machu Picchu. \\
+\hline
+SERNANP & Servicio Nacional de \'Areas Naturales Protegidas por el Estado del Per\'u. \\
+\hline
+SRS & Software Requirements Specification. \\
+\hline
+\textbf{Tipo de Florecimiento} & Caracter\'istica de la inflorescencia: apical, lateral, basal, racemoso, solitario. \\
+\hline
+TF Lite & TensorFlow Lite. Framework Google para inferencia de modelos ML en m\'oviles. \\
+\hline
+Top-N & N resultados con mayor probabilidad de clasificaci\'on. \\
+\hline
+UAC & Universidad Andina del Cusco. \\
+\hline
+\textbf{Zoom Level} & Nivel de detalle del mapa digital. ZL 15/16 = sector/trocha del SHMP. \\
+\hline
+\textbf{Ochoa (11 atributos)} & 11 campos de ficha de especie de la gu\'ia de Julio Gustavo Ochoa Estrada. \\
+\hline
+\textbf{Precision} (ML) & Proporci\'on de identificaciones de una especie que son correctas. \\
+\hline
+\textbf{Recall} (ML) & Proporci\'on de ejemplos reales de una especie que el modelo identifica. \\
+\hline
+\textbf{F1-score} & Media arm\'onica de precision y recall. \\
+\hline
+\textbf{Nueva Especie (posible)} & Planta no clasificable en las 16 especies tras m\'ultiples intentos y flujo asistido. \\
+\hline
+\end{longtable}
+
+\subsection{Convenciones del documento}
+
+\begin{itemize}
+  \item \textbf{Deber\'a / Debe:} SHALL -- obligatorio.
+  \item \textbf{Deber\'ia:} SHOULD -- recomendado con justificaci\'on t\'ecnica.
+  \item \textbf{Podr\'a:} MAY -- opcional deseable.
+\end{itemize}
+
+\subsection{Referencias}
+
+\begin{enumerate}
+  \item Qurakuna ID Requisitos.docx -- Equipo InnovaTec UAC. v1.0, feb. 2026.
+  \item ANEXO 2 -- Estructura del Proyecto de Investigaci\'on 2025-I. VRIN-UAC, ago. 2025.
+  \item ANEXO 3 -- Cronograma del Proyecto 2025-I. VRIN-UAC, ago. 2025.
+  \item Plantas -- Aplicaci\'on de Marco de Trabajo CRISP-DM. Equipo UAC, ene. 2026.
+  \item Anexo 04 -- Estructura de Informe Parcial F3-PSC-F-04. DGI-UAC.
+  \item ISO/IEC/IEEE 29148:2018 -- Requirements Engineering.
+  \item ISO/IEC 25010:2011 -- Software Quality Requirements and Evaluation.
+  \item SERNANP (2023). Reporte anual del SHMP. Ministerio del Ambiente del Per\'u.
+  \item Ochoa Estrada, J.G. -- Gu\'ia de orqu\'ideas del SHMP (11 atributos est\'andar de ficha).
+  \item Documento de Arquitectura y Requisitos Detallados (React, Node.js y App M\'ovil) -- Equipo UAC Web, abr. 2026.
+\end{enumerate}
+
+\subsection{Visi\'on general del documento}
+
+Secci\'on 1: introducci\'on y alcance. Secci\'on 2: actores, caracter\'isticas del sistema y restricciones. 
+Secci\'on 3: RF-001 a RF-060 en 10 m\'odulos. Secci\'on 4: RNF-001 a RNF-023. Secci\'on 5: ap\'endices (modelo de datos, casos de uso, trazabilidad, cronograma, glosario, cambios).
+
+%=============================================================
+\section{Descripci\'on general}
+%=============================================================
+
+\subsection{Perspectiva del producto}
+
+El sistema \textbf{Qurakuna APP} est\'a compuesto por tres capas interoperables:
+
+\begin{enumerate}
+  \item \textbf{App m\'ovil Android} (Kotlin + TF Lite): opera offline-first; sincroniza con el API al recuperar conexi\'on.
+  \item \textbf{Plataforma web} (React.js 18 + Tailwind CSS 3): interfaz de gesti\'on accesible desde navegador con conexi\'on.
+  \item \textbf{API Backend} (Node.js 20 LTS + Express + PostgreSQL 15): n\'ucleo conector unificado; expone endpoints REST JSON compatibles con la app m\'ovil y la plataforma web.
+\end{enumerate}
+
+La app m\'ovil se comunica con la API mediante Axios/Fetch API. La plataforma web tambi\'en consume el mismo API. El dise\~no de las respuestas del API est\'a dictado por lo que la app m\'ovil necesita recibir, garantizando compatibilidad estricta (Ref. 10).
+
+Se adopta una \textbf{Arquitectura Offline-First con Inferencia en el Borde (Edge)}. El backend (Node.js/PostgreSQL) act\'ua como repositorio central de conocimiento, mientras que la l\'ogica de predicci\'on reside en el cliente m\'ovil para asegurar la operatividad en las zonas de sombra de red del Santuario Hist\'orico de Machu Picchu.
+
+\subsection{Caracter\'isticas del sistema}
+
+\begin{longtable}{|p{0.8cm}|p{3.5cm}|p{7cm}|p{1.8cm}|}
+\hline
+\textbf{ID} & \textbf{Feature} & \textbf{Descripci\'on} & \textbf{Prior.} \\
+\hline
+\endhead
+F1 & Autenticaci\'on y roles & RBAC para 4 roles; JWT; sesi\'on persistente offline (app) & Alta \\
+\hline
+F2 & Captura de im\'agenes & C\'amara, validaci\'on de calidad, preprocesamiento & Alta \\
+\hline
+F3 & Identificaci\'on IA & CNN offline, 16 especies, top-3 con endemismo e IUCN & Alta \\
+\hline
+F3b & Flujo asistido & Recomendaci\'on adaptativa, preguntas guiadas, reporte & Alta \\
+\hline
+F4 & Cat\'alogo de especies & 16 fichas (11 atributos Ochoa + visuales), offline & Alta \\
+\hline
+F5 & Registro de observaciones & GPS degradado, datos de campo, purga post-sync & Alta \\
+\hline
+F6 & Validaci\'on (web) & Dashboard: aprobar/corregir/rechazar observaciones & Alta \\
+\hline
+F7 & Mapa de observaciones & Puntos georreferenciados + zonas de inter\'es SHMP (app y web) & Media \\
+\hline
+F8 & Reportes & PDF exportable, m\'etricas, encuesta usabilidad & Media \\
+\hline
+F9 & Administraci\'on (web) & Gesti\'on de cuentas, OTA modelo, cat\'alogo, API Backend & Alta \\
+\hline
+F10 & Plataforma web & Dashboard integrado para Validador, Bot\'anico y Admin & Alta \\
+\hline
+\end{longtable}
+
+\subsection{Actores del sistema}
+
+El sistema tiene \textbf{cuatro actores}, con plataforma y responsabilidades claramente particionadas:
+
+\subsubsection{Actor 1: Guardaparque (App m\'ovil -- campo)}
+\begin{longtable}{|p{3.5cm}|p{11cm}|}
+\hline
+Tipo & Guardaparque del SERNANP \\
+\hline
+Plataforma & \textbf{Aplicaci\'on m\'ovil Android exclusivamente} \\
+\hline
+Formaci\'on & Gesti\'on tur\'istica e infraestructura. Formaci\'on m\'inima en biolog\'ia. \\
+\hline
+Responsabilidades & Patrullajes, captura fotogr\'afica, identificaci\'on y registro de orqu\'ideas en campo. \\
+\hline
+Frecuencia & Diaria, m\'ultiples sesiones por patrullaje. \\
+\hline
+Necesidades clave & Identificaci\'on $<$5 min, offline 100\%, flujo m\'ax. 3 pasos, saber exactamente qu\'e est\'a viendo (especie, si es end\'emica o amenazada). \\
+\hline
+Permisos & Captura, identificaci\'on + flujo asistido, cat\'alogo, mapa, historial propio, registro de observaciones. \\
+\hline
+\end{longtable}
+
+\subsubsection{Actor 2: Validador -- Especialista en Recursos Naturales (Plataforma web)}
+\begin{longtable}{|p{3.5cm}|p{11cm}|}
+\hline
+Tipo & Especialista en biodiversidad del SERNANP \\
+\hline
+Plataforma & \textbf{Plataforma web exclusivamente} (requiere conexi\'on) \\
+\hline
+Formaci\'on & Profesional con experiencia en gesti\'on de biodiversidad y conservaci\'on. \\
+\hline
+Responsabilidades & Validar identificaciones de los guardaparques, supervisar calidad de datos, analizar observaciones, retroalimentar al guardaparque. \\
+\hline
+Frecuencia & Diaria o semanal desde estaci\'on de trabajo. \\
+\hline
+Necesidades clave & Dashboard de observaciones pendientes, herramientas de correcci\'on, estad\'isticas de precisi\'on, mapa de observaciones, reportes exportables. \\
+\hline
+Permisos & Dashboard de validaci\'on, mapa de observaciones web, estad\'isticas de precisi\'on, exportaci\'on de reportes. No puede gestionar usuarios ni actualizar el modelo. \\
+\hline
+\end{longtable}
+
+\subsubsection{Actor 3: Bot\'anico Especialista (Plataforma web)}
+\begin{longtable}{|p{3.5cm}|p{11cm}|}
+\hline
+Tipo & Bi\'ologo tax\'onomo con especializaci\'on en orqu\'ideas andinas \\
+\hline
+Plataforma & \textbf{Plataforma web exclusivamente} (requiere conexi\'on) \\
+\hline
+Formaci\'on & Bi\'ologo con experiencia en Orchidaceae del SHMP. Contratado por S/.2,000. \\
+\hline
+Responsabilidades & Validar y editar las 16 fichas del cat\'alogo (11 atributos + atributos visuales), etiquetar el dataset de entrenamiento (ground truth), revisar reportes de especie desconocida. \\
+\hline
+Frecuencia & Fases 2 y 3 del proyecto (nov. 2025 -- abr. 2026). \\
+\hline
+Necesidades clave & Editor de fichas de especie con todos los atributos (labelo, florecimiento, hojas), cola de reportes de especie no identificada con im\'agenes y datos de campo. \\
+\hline
+Permisos & Edici\'on de fichas del cat\'alogo, revisi\'on de reportes de especie desconocida. No puede gestionar usuarios ni actualizar el modelo. \\
+\hline
+\end{longtable}
+
+\subsubsection{Actor 4: Administrador del Sistema (Plataforma web)}
+\begin{longtable}{|p{3.5cm}|p{11cm}|}
+\hline
+Tipo & Personal t\'ecnico designado por SERNANP/UAC \\
+\hline
+Plataforma & \textbf{Plataforma web exclusivamente} (requiere conexi\'on) \\
+\hline
+Formaci\'on & Conocimientos en administraci\'on de sistemas inform\'aticos. \\
+\hline
+Responsabilidades & \textbf{Gesti\'on de cuentas de usuario} (\'unico actor con acceso a CRUD de usuarios); actualizaci\'on OTA del modelo CNN; mantenimiento del cat\'alogo; monitoreo del sistema y del API Backend. \\
+\hline
+Frecuencia & Mensual o ante eventos espec\'ificos (nuevo guardaparque, nuevo modelo). \\
+\hline
+Necesidades clave & Panel de administraci\'on web con CRUD de usuarios, control de versiones del modelo, gesti\'on del cat\'alogo de 16 especies, panel de estad\'isticas globales. \\
+\hline
+Permisos & Acceso completo a todos los m\'odulos de la plataforma web. \'Unico actor que puede crear, editar y desactivar cuentas de usuario de cualquier rol. \\
+\hline
+\end{longtable}
+
+\subsection{Restricciones generales}
+
+\begin{itemize}
+  \item \textbf{App m\'ovil:} Android 8.0 (API 26)+; TF Lite; APK $\leq$150 MB. El sistema deberá ser compatible con dispositivos móviles Android cuyo hardware cuente con un mínimo de 2 GB de memoria RAM disponible. Se optimizará el software para garantizar fluidez en este umbral base, aprovechando capacidades superiores en dispositivos de gama media y alta.
+  \item \textbf{Plataforma web:} React.js 18.x; Tailwind CSS 3.x; compatible con Chrome/Firefox/Edge (\'ultimas 2 versiones). Paleta corporativa: \texttt{\#757B47}, \texttt{\#FEFAE0} y tonos complementarios.
+  \item \textbf{API Backend:} Node.js 20.x LTS; Express; PostgreSQL 15.x; JWT; Bcrypt. Estructura JSON de respuestas compatible con la app m\'ovil (Ref. 10).
+  \item \textbf{De tiempo:} Ago. 2025 -- Jul. 2026. Desarrollo: abr.--may. 2026. Validaci\'on campo: jun. 2026.
+  \item \textbf{Presupuestarias:} Total S/.10,991.00. Servidor S/.500 (sincronizaci\'on lotes diferidos; $\leq$5 usuarios web concurrentes).
+  \item \textbf{Legales:} Autorizaci\'on SERNANP. Ley N.° 29733 de Protecci\'on de Datos Personales.
+  \item \textbf{Modelo IA:} 16 especies; 500--700 im\'agenes/especie; precisi\'on depende del dataset.
+  \item \textbf{Energ\'eticas:} CNN + GPS + C\'amara concurrentes limitan la bater\'ia (RNF-020).
+\end{itemize}
+
+\subsection{Suposiciones y dependencias}
+
+\begin{itemize}
+  \item Los guardaparques tendr\'an dispositivos Android compatibles del SERNANP.
+  \item El Bot\'anico validar\'a las 16 fichas (ene.--feb. 2026).
+  \item La plataforma web ser\'a accesible desde los puestos de control con conexi\'on a internet.
+  \item El equipo de desarrollo web tiene acceso a la documentaci\'on t\'ecnica o puede realizar ingenier\'ia inversa a las peticiones de red de la app m\'ovil para replicar \textit{endpoints} (Ref. 10, secci\'on 6).
+  \item La confirmaci\'on taxon\'omica de una posible nueva especie requiere an\'alisis ex-situ por el Bot\'anico.
+\end{itemize}
+
+%=============================================================
+\section{Requerimientos funcionales}
+%=============================================================
+
+Seg\'un ISO/IEC/IEEE 29148:2018, cada RF incluye: ID, nombre, obligatoriedad, descripci\'on, rationale, fuente, prioridad, verificaci\'on, stakeholder y criterios de aceptaci\'on.
+
+%-------------------------------------------
+\subsection{M\'odulo 1: Autenticaci\'on y Gesti\'on de Usuarios}
+%-------------------------------------------
+
+\textit{Plataforma: App m\'ovil (Guardaparque) + Plataforma web (Validador, Bot\'anico, Administrador). El registro y la gesti\'on de cuentas son exclusivos del Administrador desde la web.}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-001} \criticomark} \\
+\hline
+Nombre & Registro de nuevo usuario (Administrador -- Web) \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & El sistema deber\'a permitir al Administrador, desde la plataforma web, registrar nuevos usuarios con: nombres completos, email institucional, rol (guardaparque / validador / bot\'anico / administrador), puesto de control asignado (para guardaparques) y credenciales temporales autogeneradas. La plataforma web env\'ia los datos en formato JSON al API Backend (HTTP 201 -- Ref. 10, RF-01). \\
+\hline
+Rationale & El Administrador es el \'unico actor autorizado para crear cuentas. El registro nunca es autom\'atico ni lo hacen los propios usuarios. \\
+\hline
+Fuente & \inferido{}. Ref. 10 (RF-01, RF-03). \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Inspecci\'on de red (DevTools): petici\'on POST desde React al API retorna HTTP 201. \\
+\hline
+Stakeholder & Administrador \\
+\hline
+Criterios de Aceptaci\'on &
+AC-001.1: Admin crea usuario con todos los campos obligatorios completados. \newline
+AC-001.2: Emails duplicados rechazados con mensaje espec\'ifico. \newline
+AC-001.3: Contrase\~na temporal \'unica $\geq$8 caracteres generada autom\'aticamente. \newline
+AC-001.4: Usuario registrado en PostgreSQL del servidor; si es Guardaparque, disponible en app al sincronizarse. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-002} \criticomark} \\
+\hline
+Nombre & Inicio de sesi\'on con credenciales \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Ambas plataformas deber\'an autenticar usuarios mediante email y contrase\~na. El API Backend valida el token JWT en cada petici\'on protegida; peticiones sin token v\'alido retornan HTTP 401 (Ref. 10, RF-03). En el primer inicio con contrase\~na temporal, el sistema exige cambio obligatorio. \\
+\hline
+Rationale & Autenticaci\'on segura unificada para app y web. \\
+\hline
+Fuente & \inferido{}. Ref. 10 (RF-03). \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba funcional en app y en navegador web; prueba de rechazo de petici\'on sin token (HTTP 401). \\
+\hline
+Stakeholder & Todos los actores \\
+\hline
+Criterios de Aceptaci\'on &
+AC-002.1: Credenciales correctas en app: acceso $\leq$3 segundos. \newline
+AC-002.2: Credenciales correctas en web: acceso $\leq$2 segundos. \newline
+AC-002.3: Credenciales incorrectas: mensaje gen\'erico. \newline
+AC-002.4: Primer inicio: fuerza cambio de contrase\~na. \newline
+AC-002.5: 5 intentos fallidos: cuenta bloqueada 15 minutos. \newline
+AC-002.6: Petici\'on sin JWT al API: HTTP 401. \\
+\hline
+\end{longtable}
+
+\newpage
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-003} \criticomark} \\
+\hline
+Nombre & Sesi\'on persistente offline (App m\'ovil -- Guardaparque) \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app m\'ovil deber\'a mantener la sesi\'on activa sin conexi\'on hasta cierre expl\'icito o 30 d\'ias de inactividad. Si expira offline, continua operaci\'on hasta la pr\'oxima conexi\'on, momento en que fuerza reautenticaci\'on antes de sincronizar. El token de sesi\'on y cualquier credencial persistente se almacenarán de forma segura utilizando \textbf{EncryptedSharedPreferences} (o similar) respaldado por el \textbf{Android Keystore System}; no se permite almacenamiento en texto plano. \\
+\hline
+Rationale & Zonas del SHMP sin cobertura de red. El Guardaparque no puede autenticarse repetidamente en campo. \\
+\hline
+Fuente & Plantas -- CRISP-DM (Fase 1). \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba funcional en modo avi\'on. \\
+\hline
+Stakeholder & Guardaparque \\
+\hline
+Criterios de Aceptaci\'on &
+AC-003.1: App abre sin conexi\'on: acceso directo sin login. \newline
+AC-003.2: ``Cerrar sesi\'on'' invalida el token local. \newline
+AC-003.3: Token expirado offline: app funciona; al conectar fuerza reautenticaci\'on. \newline
+AC-003.4: Campos \texttt{token\_local} y \texttt{fecha\_expiracion\_sesion} actualizados en cada inicio/cierre. \newline
+AC-003.5: El \texttt{token\_local} y cualquier credencial persistente se almacenan cifrados en reposo mediante el Keystore de Android; no existen archivos de texto plano con datos de sesi\'on. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-004}} \\
+\hline
+Nombre & Gesti\'on de perfil de usuario \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & El sistema deber\'ia permitir a los usuarios autenticados (en app o web seg\'un su rol) visualizar y editar su perfil: cambiar contrase\~na, tel\'efono y preferencias de notificaci\'on. \\
+\hline
+Fuente & \inferido{} \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-004.1: Acceso al perfil desde men\'u principal. \newline
+AC-004.2: Cambios guardados (app: sincronizan al conectar; web: inmediato). \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-005} \criticomark} \\
+\hline
+Nombre & Control de acceso basado en roles (RBAC) \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & El sistema deber\'a implementar RBAC con los siguientes permisos, con partici\'on estricta de plataformas por rol:\newline
+\textbf{Guardaparque (solo app m\'ovil):} captura, identificaci\'on + flujo asistido, cat\'alogo, mapa de la app, historial propio, registro de observaciones.\newline
+\textbf{Validador (solo web):} dashboard de observaciones pendientes, aprobar/corregir/rechazar, estad\'isticas de precisi\'on, mapa web, exportaci\'on de reportes.\newline
+\textbf{Bot\'anico (solo web):} editor del cat\'alogo (11 atributos + atributos visuales), cola de reportes de especie desconocida. Sin acceso a gesti\'on de usuarios.\newline
+\textbf{Administrador (solo web):} todos los permisos anteriores + CRUD de usuarios, actualizaci\'on OTA del modelo, gesti\'on del cat\'alogo de 16 especies, panel de estad\'isticas globales, configuraci\'on del sistema. \\
+\hline
+Rationale & La partici\'on de plataformas por rol resuelve el vac\'io de versiones anteriores. Los roles de gesti\'on (Validador, Bot\'anico, Admin) no necesitan app m\'ovil; el Guardaparque no necesita plataforma web. \\
+\hline
+Fuente & \inferido{}. Ref. 10. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba de permisos con sesi\'on de cada rol en app y web. \\
+\hline
+Stakeholder & Todos los actores \\
+\hline
+Criterios de Aceptaci\'on &
+AC-005.1: Guardaparque no puede acceder a la plataforma web (HTTP 403). \newline
+AC-005.2: Validador/Bot\'anico/Admin no pueden autenticarse en la app m\'ovil. \newline
+AC-005.3: Validador accede a validaci\'on, estad\'isticas y mapa web; no puede editar el cat\'alogo. \newline
+AC-005.4: Bot\'anico edita fichas y revisa reportes; no puede gestionar usuarios. \newline
+AC-005.5: Administrador es el \'unico actor que crea, edita y desactiva cuentas de usuario. \\
+\hline
+\end{longtable}
+
+%-------------------------------------------
+\subsection{M\'odulo 2: Captura y Procesamiento de Im\'agenes}
+%-------------------------------------------
+
+\textit{Plataforma: App m\'ovil exclusivamente.}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-006} \criticomark} \\
+\hline
+Nombre & Captura desde c\'amara en tiempo real \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app deber\'a permitir capturar fotograf\'ias con visor en tiempo real, gu\'ias de encuadre y enfoque t\'actil. C\'amara activada bajo demanda y liberada al completar la captura (RNF-020). \\
+\hline
+Fuente & Qurakuna ID Requisitos.docx \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba funcional en dispositivo f\'isico. \\
+\hline
+Stakeholder & Guardaparque \\
+\hline
+Criterios de Aceptaci\'on &
+AC-006.1: C\'amara abre en $\leq$2 segundos. \newline
+AC-006.2: Gu\'ias de encuadre visibles. \newline
+AC-006.3: Enfoque t\'actil funcional. \newline
+AC-006.4: Imagen guardada temporalmente en almacenamiento local. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-007}} \\
+\hline
+Nombre & Carga de im\'agenes desde galer\'ia \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & La app deber\'ia permitir seleccionar una imagen existente (.jpg o .png) de la galer\'ia para identificaci\'on. \\
+\hline
+Fuente & Qurakuna ID Requisitos.docx \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-007.1: Selector de archivos del sistema se abre. \newline
+AC-007.2: Solo .jpg y .png aceptados. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-008} \criticomark} \\
+\hline
+Nombre & Validaci\'on autom\'atica de calidad de imagen \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app deber\'a validar autom\'aticamente: resoluci\'on m\'inima 512$\times$512 px; nitidez por varianza del Laplaciano $\geq$ \texttt{umbral\_laplaciano} (par\'ametro remoto configurable, por defecto 100); brillo promedio en [30, 220]. \\
+\hline
+Fuente & Qurakuna ID Requisitos.docx \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba con conjunto de im\'agenes de calidades controladas ($\geq$20). \\
+\hline
+Stakeholder & Guardaparque \\
+\hline
+Criterios de Aceptaci\'on &
+AC-008.1: $<$512$\times$512: ``Resoluci\'on insuficiente''. \newline
+AC-008.2: Varianza $<$ umbral: ``Imagen borrosa, mantenga el dispositivo firme''. \newline
+AC-008.3: Brillo $<$30: ``Poca luz''; brillo $>$220: ``Sobreexposici\'on''. \newline
+AC-008.4: \texttt{umbral\_laplaciano} descargado al iniciar sesi\'on con conexi\'on; sin conexi\'on usa \'ultimo valor o 100. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-009} \criticomark} \\
+\hline
+Nombre & Preprocesamiento local de imagen \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app deber\'a preprocesar la imagen validada: redimensionar a 224$\times$224 px con \textit{center crop} y normalizar p\'ixeles a [0, 1]. Totalmente local, sin red. \\
+\hline
+Fuente & Plantas -- CRISP-DM (Fase 3). \\
+\hline
+Prioridad & Alta \\
+\hline
+Criterios de Aceptaci\'on &
+AC-009.1: Imagen resultante: 224$\times$224 px. \newline
+AC-009.2: P\'ixeles en [0.0, 1.0] (float32). \newline
+AC-009.3: Preprocesamiento en $\leq$500 ms. \newline
+AC-009.4: Sin solicitudes de red. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-010}} \\
+\hline
+Nombre & Feedback visual de calidad al usuario \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & La app deber\'ia mostrar indicadores en tiempo real durante la captura: nivel de luz, alerta de desenfoque. Tras rechazo, mensaje con sugerencia espec\'ifica. \\
+\hline
+Fuente & \inferido{} \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-010.1: Poca luz: \'icono de alerta en visor. \newline
+AC-010.2: Borrosidad: mensaje espec\'ifico en $\leq$1 segundo. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-011}} \\
+\hline
+Nombre & Soporte a m\'ultiples \'angulos de captura \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & La app deber\'ia recomendar capturar la orqu\'idea desde diferentes \'angulos: frontal del labelo, lateral, superior, hoja. Cada \'angulo genera una imagen independiente asociada a la observaci\'on (tabla \texttt{ImagenObservacion}, relaci\'on 1-a-N). \\
+\hline
+Fuente & Qurakuna ID Requisitos.docx \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-011.1: App muestra sugerencias de \'angulos con \'iconos ilustrativos. \\
+\hline
+\end{longtable}
+
+%-------------------------------------------
+\subsection{M\'odulo 3: Identificaci\'on de Especies (Motor IA)}
+%-------------------------------------------
+
+\textit{Plataforma: App m\'ovil exclusivamente. CNN offline embebida para 16 especies.}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-012} \criticomark} \\
+\hline
+Nombre & Clasificaci\'on autom\'atica mediante CNN embebida (16 especies) \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app deber\'a ejecutar localmente un modelo CNN en formato TF Lite para clasificar la imagen preprocesada entre las \textbf{16 especies de orqu\'ideas del SHMP} validadas por el Bot\'anico. Modelo embebido en la APK; inferencia 100\% offline. \\
+\hline
+Fuente & Anexo 04. Plantas -- CRISP-DM (Fase 4). \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba de integraci\'on + validaci\'on de precisi\'on con dataset de 16 clases. \\
+\hline
+Stakeholder & Guardaparque \\
+\hline
+Criterios de Aceptaci\'on &
+AC-012.1: Modelo carga en $\leq$2 segundos desde almacenamiento local. \newline
+AC-012.2: Produce vector de probabilidades para las 16 clases. \newline
+AC-012.3: Inferencia completa en modo avi\'on. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-013} \criticomark} \\
+\hline
+Nombre & Mostrar top-3 con informaci\'on completa de endemismo y conservaci\'on \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app deber\'a mostrar los 3 resultados m\'as probables con: nombre cient\'ifico, nombre com\'un (ES/EN), nombre en quechua (cuando disponible), porcentaje de confianza, barra visual y, de forma \textbf{destacada}: (a) indicador de \textbf{endemismo} (end\'emica SHMP / del Per\'u / no end\'emica) y (b) \textbf{estado IUCN} (CR / EN / VU / LC). El Guardaparque debe saber exactamente qu\'e est\'a viendo y si la especie requiere cuidado especial. \\
+\hline
+Rationale & Los Guardaparques necesitan conocer si la planta es end\'emica o est\'a amenazada para actuar correctamente en campo. Esta informaci\'on es cr\'itica para sus decisiones de conservaci\'on. \\
+\hline
+Fuente & Bot\'anico especialista. ANEXO 2. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba con im\'agenes de las 16 especies, incluyendo end\'emicas y amenazadas. \\
+\hline
+Stakeholder & Guardaparque \\
+\hline
+Criterios de Aceptaci\'on &
+AC-013.1: 3 especies ordenadas de mayor a menor confianza. \newline
+AC-013.2: Nombre cient\'ifico y porcentaje num\'erico en cada resultado. \newline
+AC-013.3: Indicador de endemismo con \'icono diferenciado (SHMP / Per\'u). \newline
+AC-013.4: Estado IUCN con color: rojo (CR), naranja (EN), amarillo (VU), verde (LC). \newline
+AC-013.5: Informaci\'on correcta para las 16 especies seg\'un validaci\'on del Bot\'anico. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-014} \criticomark} \\
+\hline
+Nombre & Funcionamiento offline completo del motor IA \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app deber\'a garantizar que captura, preprocesamiento, clasificaci\'on CNN y resultados funcionen al 100\% sin conexi\'on. Modelo y metadatos de las 16 especies embebidos. \\
+\hline
+Fuente & Plantas -- CRISP-DM (Fase 1). ANEXO 2. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba modo avi\'on con 20 identificaciones consecutivas. \\
+\hline
+Criterios de Aceptaci\'on &
+AC-014.1: Modo avi\'on: toda la funcionalidad de identificaci\'on disponible. \newline
+AC-014.2: Sin errores de red durante la identificaci\'on. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-015} \criticomark} \\
+\hline
+Nombre & Umbral m\'inimo de confianza configurable \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app deber\'a implementar un umbral de confianza configurable por el Administrador (por defecto: 70\%). Si el resultado de mayor confianza es $<$ umbral, activa autom\'aticamente el flujo asistido (RF-049). \\
+\hline
+Fuente & \inferido{} -- CRISP-DM Fase 4. \\
+\hline
+Prioridad & Alta \\
+\hline
+Criterios de Aceptaci\'on &
+AC-015.1: Confianza $<$ umbral: activa el flujo asistido RF-049. \newline
+AC-015.2: Admin cambia umbral entre 50\% y 90\% desde la web; se aplica en pr\'oxima sincronizaci\'on. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-016} \textit{(Reubicado a RNF-019)}} \\
+\hline
+\multicolumn{2}{|p{14.5cm}|}{Soporte a estados fenol\'ogicos. Reubicado a RNF-019 (calidad del modelo IA). Ver RNF-019.} \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-017} \textit{(Consolidado en RNF-001)}} \\
+\hline
+\multicolumn{2}{|p{14.5cm}|}{Tiempo de respuesta de identificaci\'on. Consolidado en RNF-001 para evitar duplicado. Trazabilidad $\rightarrow$ RNF-001.} \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-018} \criticomark} \\
+\hline
+Nombre & Indicaci\'on de especies end\'emicas y en riesgo \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app deber\'a mostrar \'icono distintivo y alerta para especies end\'emicas del Per\'u o clasificadas en IUCN como VU, EN o CR. Integrado con RF-013 en la pantalla de resultados. \\
+\hline
+Fuente & ANEXO 2 (IUCN 2023). Bot\'anico especialista. \\
+\hline
+Prioridad & Alta \\
+\hline
+Criterios de Aceptaci\'on &
+AC-018.1: Especie CR: \'icono rojo y texto de alerta. \newline
+AC-018.2: Especie end\'emica no amenazada: \'icono diferenciado. \\
+\hline
+\end{longtable}
+
+% --- NUEVO RF-059 (Edge AI inmediato) ---
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-059} \criticomark} \\
+\hline
+Nombre & Identificación de Especies Offline (Edge AI) \\
+\hline
+Obligatoriedad & \textbf{deberá} \\
+\hline
+Descripción & La aplicación móvil deberá realizar la clasificación de orquídeas de forma local y autónoma (Edge AI) utilizando un motor de inferencia TensorFlow Lite. La respuesta de identificación debe ser inmediata (< 2 segundos) sin requerir acceso a red en el momento de la captura. \\
+\hline
+Rationale & Elimina cualquier dependencia de API externa; garantiza la operación en las zonas sin cobertura del SHMP. \\
+\hline
+Fuente & Requisito de arquitectura Offline-First. \\
+\hline
+Prioridad & Alta (Crítica) \\
+\hline
+Verificación & Prueba en modo avión: captura → resultado en <2 s, sin tráfico de red. \\
+\hline
+Stakeholder & Guardaparque \\
+\hline
+Criterios de Aceptación & AC-059.1: Tiempo de inferencia menor a 2 segundos en dispositivo con 2 GB de RAM. \newline
+
+AC-059.2: La identificación no genera ninguna petición HTTP durante la captura. \newline
+AC-059.3: Funciona con el modelo cuantizado (Int8) embebido en la APK. \\
+\hline
+\end{longtable}
+
+%-------------------------------------------
+\subsection{M\'odulo 3B: Flujo Asistido de Identificaci\'on}
+%-------------------------------------------
+
+\textit{Plataforma: App m\'ovil exclusivamente. Se activa cuando la confianza CNN no alcanza el umbral (RF-015) o cuando el Guardaparque solicita ayuda.}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-049} \criticomark} \\
+\hline
+Nombre & Recomendaci\'on adaptativa de nueva fotograf\'ia \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Cuando la confianza es inferior al umbral, la app deber\'a: (a) mostrar los resultados disponibles con advertencia ``Identificaci\'on incierta''; (b) recomendar nueva fotograf\'ia con sugerencias espec\'ificas de \'angulo y condiciones: ``Enfoca el labelo frontalmente'', ``Captura tambi\'en las hojas'', ``Busca mejor iluminaci\'on''. Registra el n\'umero de intentos del ciclo. \\
+\hline
+Rationale & Una foto de mejor \'angulo puede superar el umbral. La sugerencia espec\'ifica orienta al Guardaparque hacia los elementos clave de identificaci\'on (labelo, hojas, tipo de florecimiento). \\
+\hline
+Fuente & Bot\'anico especialista. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba con imagen de baja confianza: recomendaci\'on en $\leq$2 segundos. \\
+\hline
+Stakeholder & Guardaparque \\
+\hline
+Criterios de Aceptaci\'on &
+AC-049.1: Confianza $<$ umbral: advertencia y recomendaci\'on de nueva foto en $\leq$2 segundos. \newline
+AC-049.2: Recomendaci\'on incluye al menos un \'angulo espec\'ifico (labelo, hoja o florecimiento). \newline
+AC-049.3: Contador de intentos del ciclo registrado internamente. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-050} \criticomark} \\
+\hline
+Nombre & Identificaci\'on asistida por preguntas guiadas \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Si tras \textbf{2 o m\'as intentos fotogr\'aficos} la confianza sigue por debajo del umbral, la app deber\'a activar preguntas guiadas sobre caracter\'isticas visuales clave:\newline
+\textbf{Preguntas predefinidas:}\newline
+\quad -- ``\textit{?`Cu\'al es el color predominante del labelo?}'' (blanco / morado / amarillo / rosa / bicolor)\newline
+\quad -- ``\textit{?`C\'omo son las hojas?}'' (lanceoladas largas / ovales cortas / en roseta basal / carnosas)\newline
+\quad -- ``\textit{?`D\'onde surge la inflorescencia?}'' (escapo central / lateral / entre hojas)\newline
+\quad -- ``\textit{?`D\'onde crece la planta?}'' (en el suelo / sobre rocas / sobre \'arboles)\newline
+\quad -- ``\textit{?`Hay varias flores en el mismo tallo?}'' (varias flores -- racemosa / una sola flor)\newline
+\textbf{Campo libre:} el Guardaparque puede ingresar observaciones adicionales (hasta 500 caracteres): color, tama\~no, condiciones, \'epoca.\newline
+Respuestas almacenadas localmente y sincronizadas al servidor junto con la observaci\'on. \\
+\hline
+Rationale & Los atributos visuales de las orqu\'ideas (labelo, florecimiento, morfolog\'ia foliar, biotipo) son los mismos que usa el Bot\'anico en la identificaci\'on taxon\'omica. Las preguntas reproducen el proceso cognitivo del experto de forma accesible para el Guardaparque. \\
+\hline
+Fuente & Bot\'anico especialista. Gu\'ia Ochoa (16 especies). \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba funcional con guardaparques simulando identificaci\'on fallida. \\
+\hline
+Stakeholder & Guardaparque \\
+\hline
+Criterios de Aceptaci\'on &
+AC-050.1: Tras 2 intentos fallidos: flujo de preguntas activado autom\'aticamente. \newline
+AC-050.2: Al menos 4 de las 5 preguntas con opciones visuales (\'iconos + texto). \newline
+AC-050.3: Campo libre permite hasta 500 caracteres. \newline
+AC-050.4: Respuestas almacenadas localmente y sincronizadas con la observaci\'on. \newline
+AC-050.5: Flujo de preguntas funciona completamente offline. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-051} \criticomark} \\
+\hline
+Nombre & Reporte de especie desconocida / posible nueva especie \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Si tras el flujo de preguntas guiadas (RF-050) el Guardaparque no puede identificar la planta, la app deber\'a ofrecer la opci\'on de generar un \textbf{Reporte de Especie No Identificada} con:\newline
+(a) Todas las fotograf\'ias capturadas (m\'ultiples \'angulos).\newline
+(b) Respuestas al flujo de preguntas guiadas.\newline
+(c) Coordenadas GPS (con margen real si aplica degradaci\'on elegante).\newline
+(d) Fecha, hora y puesto de control.\newline
+(e) Estado fenol\'ogico observado.\newline
+(f) Observaciones de texto libre adicionales.\newline
+(g) Vector de probabilidades del \'ultimo intento CNN.\newline
+El reporte se sincroniza al servidor y aparece en la cola de revisi\'on del Bot\'anico (RF-055). Si 3 o m\'as Guardaparques distintos reportan el mismo esp\'ecimen (zona $\leq$500m, per\'iodo $\leq$30 d\'ias), el sistema genera una alerta de ``Posible Nueva Especie'' para revisi\'on prioritaria por el Bot\'anico y el Administrador. \\
+\hline
+Rationale & Un fallo completo de identificaci\'on tras m\'ultiples intentos es una se\~nal de alto valor cient\'ifico que debe escalarse al experto taxon\'omico. La coincidencia de m\'ultiples reportes en la misma zona aumenta la probabilidad de que sea un esp\'ecimen genuinamente no catalogado. \\
+\hline
+Fuente & Bot\'anico especialista. ANEXO 2 (conservaci\'on de biodiversidad). \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba simulando m\'ultiples intentos fallidos; verificar generaci\'on y sincronizaci\'on del reporte. \\
+\hline
+Stakeholder & Guardaparque, Bot\'anico, Administrador \\
+\hline
+Criterios de Aceptaci\'on &
+AC-051.1: Opci\'on ``Reportar como no identificada'' disponible tras flujo de preguntas. \newline
+AC-051.2: Reporte incluye los 7 campos obligatorios. \newline
+AC-051.3: Reporte almacenado localmente y sincronizado al servidor al conectar. \newline
+AC-051.4: Reporte aparece en la cola de revisi\'on del Bot\'anico en la web. \newline
+AC-051.5: 3+ reportes en zona/per\'iodo: alerta ``Posible Nueva Especie'' en dashboard del Bot\'anico y Administrador. \\
+\hline
+\end{longtable}
+
+%-------------------------------------------
+\subsection{M\'odulo 4: Cat\'alogo de Especies}
+%-------------------------------------------
+
+\textit{Plataforma: App m\'ovil (consulta offline) + Plataforma web (edici\'on, Bot\'anico/Administrador).}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-019} \criticomark} \\
+\hline
+Nombre & Ficha detallada por especie (16 especies -- 11 atributos Ochoa + atributos visuales) \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & El sistema deber\'a mantener una ficha completa por cada una de las \textbf{16 especies} con los \textbf{11 atributos Ochoa}:\newline
+(1) Biotipo(s) o Forma(s) de crecimiento. (2) Sistema(s) Ecol\'ogico(s). (3) Endemismo [local e* / nacional e]. (4) Estado Conservaci\'on IUCN. (5) Reporte Nuevo [Machupicchu\textsuperscript{(m)} / Per\'u\textsuperscript{(?)}]. (6) Nombre com\'un ES. (7) Descripci\'on ES. (8) Detalle flor/inflorescencia/fruto. (9) Fotograf\'ia general. (10) Nombre com\'un EN. (11) Descripci\'on EN.\newline
+Adicionalmente, los siguientes \textbf{atributos visuales clave de identificaci\'on}:\newline
+\quad -- \textbf{Color y morfolog\'ia del labelo:} color(es), manchas, forma (tubular/abierto/espatulado).\newline
+\quad -- \textbf{Tipo de florecimiento:} apical/lateral/basal; racemoso/solitario; \'epoca t\'ipica.\newline
+\quad -- \textbf{Morfolog\'ia foliar:} forma, textura, disposici\'on, longitud aproximada.\newline
+\quad -- \textbf{Biotipo detallado:} ep\'ifita/terrestre/lit\'ofita.\newline
+\quad -- Indicadores de presencia en Camino Inca, Jard\'in Bot\'anico Machupicchu y Jard\'in Bot\'anico de la Llaqta. \\
+\hline
+Rationale & Los atributos visuales del labelo, tipo de florecimiento y hojas son los elementos primarios de identificaci\'on visual de orqu\'ideas. El Guardaparque necesita saber exactamente qu\'e est\'a viendo: estos atributos alimentan las preguntas guiadas (RF-050) y permiten la comparaci\'on en campo. \\
+\hline
+Fuente & Bot\'anico especialista. Gu\'ia Ochoa (Ref. 9). CR-01. ANEXO 2. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Revisi\'on con Bot\'anico: 11 atributos Ochoa + atributos visuales para las 16 especies. \\
+\hline
+Stakeholder & Guardaparque, Validador, Bot\'anico \\
+\hline
+Criterios de Aceptaci\'on &
+AC-019.1: Ficha de cada una de las 16 especies con 11 atributos Ochoa completos. \newline
+AC-019.2: Atributos visuales (labelo, florecimiento, hojas) completos para las 16 especies. \newline
+AC-019.3: Campos opcionales visibles solo cuando est\'an disponibles. \newline
+AC-019.4: Ficha marcada ``validada'' por el Bot\'anico. \newline
+AC-019.5: BD almacena todos los atributos en la entidad \texttt{Especie} (Ap\'endice A). \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-020} \criticomark} \\
+\hline
+Nombre & Galer\'ia de im\'agenes de referencia por especie \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Cada ficha deber\'a incluir $\geq$3 fotos de referencia por especie: frontal flor (\'enfasis en labelo), lateral e imagen de hojas. Validadas por el Bot\'anico. \\
+\hline
+Fuente & Qurakuna ID Requisitos.docx. CRISP-DM Fase 3. \\
+\hline
+Prioridad & Alta \\
+\hline
+Criterios de Aceptaci\'on &
+AC-020.1: Cada especie tiene $\geq$3 im\'agenes (frontal-labelo, lateral, hoja). \newline
+AC-020.2: Im\'agenes visibles en modo offline. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-021}} \\
+\hline
+Nombre & B\'usqueda y filtrado de especies \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app deber\'a permitir buscar entre las 16 especies por nombre cient\'ifico, nombre com\'un (ES/EN) o quechua, y filtrar por: estado IUCN, zona del Santuario, estado fenol\'ogico, biotipo y sistema ecol\'ogico. \\
+\hline
+Fuente & \inferido{} \\
+\hline
+Prioridad & Alta \\
+\hline
+Criterios de Aceptaci\'on &
+AC-021.1: B\'usqueda parcial retorna resultados en $\leq$1 segundo. \newline
+AC-021.2: Filtro por IUCN funcional. \newline
+AC-021.3: B\'usqueda offline. \newline
+AC-021.4: Nombre exacto retorna especie correcta como primer resultado. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-022} \criticomark} \\
+\hline
+Nombre & Acceso completo al cat\'alogo en modo offline \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & El cat\'alogo completo de las 16 especies (fichas + atributos visuales + im\'agenes de referencia) deber\'a estar disponible localmente sin conexi\'on. \\
+\hline
+Fuente & CRISP-DM Fase 6. ANEXO 2. \\
+\hline
+Prioridad & Alta \\
+\hline
+Criterios de Aceptaci\'on &
+AC-022.1: Cat\'alogo accesible en modo avi\'on. \newline
+AC-022.2: Im\'agenes visibles sin conexi\'on. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-023}} \\
+\hline
+Nombre & Edici\'on de fichas del cat\'alogo (Bot\'anico/Administrador -- Web) \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La plataforma web deber\'a permitir al Bot\'anico y al Administrador agregar, editar y marcar como validada cada ficha del cat\'alogo, incluyendo los 11 atributos Ochoa y los atributos visuales adicionales. Toda edici\'on registrada con usuario y fecha. \\
+\hline
+Fuente & CRISP-DM Fase 3. \\
+\hline
+Prioridad & Alta \\
+\hline
+Criterios de Aceptaci\'on &
+AC-023.1: Bot\'anico edita todos los campos y guarda. \newline
+AC-023.2: Historial de ediciones con qui\'en y cu\'ando. \\
+\hline
+\end{longtable}
+
+%-------------------------------------------
+\subsection{M\'odulo 5: Registro de Observaciones en Campo}
+%-------------------------------------------
+
+\textit{Plataforma: App m\'ovil exclusivamente.}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-024} \criticomark} \\
+\hline
+Nombre & Crear registro de observaci\'on con informaci\'on biol\'ogica completa \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app deber\'a crear un registro de observaci\'on con:\newline
+\textbf{Autom\'aticos:} especie identificada (o ``no identificada''), fecha/hora, coordenadas GPS, fotograf\'ia(s).\newline
+\textbf{Requeridos:} estado del individuo (floraci\'on/crecimiento/marchito), puesto de control, notas libres.\newline
+\textbf{Informaci\'on biol\'ogica adicional} (opcional pero solicitada): color del labelo observado, presencia de flores abiertas, condiciones clim\'aticas (sol/nublado/niebla/lluvia), microh\'abitat (\'arbol/roca/suelo). \\
+\hline
+Rationale & La informaci\'on biol\'ogica de campo (estado fenol\'ogico, microh\'abitat, condiciones) aumenta el valor cient\'ifico del registro y facilita la validaci\'on por el Validador. \\
+\hline
+Fuente & Bot\'anico especialista. ANEXO 2. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba funcional en campo, incluyendo escenarios con se\~nal GPS d\'ebil. \\
+\hline
+Stakeholder & Guardaparque \\
+\hline
+Criterios de Aceptaci\'on &
+AC-024.1: Registro creado en $\leq$30 segundos tras la identificaci\'on. \newline
+AC-024.2: GPS: intento $\leq$30s; si no alcanza $\leq$10m, aplica degradaci\'on elegante: guarda mejor ubicaci\'on disponible con margen real en campo \texttt{precision\_gps\_m}, mensaje ``Se\~nal GPS d\'ebil -- guardando ubicaci\'on aproximada ($\pm$Xm)''. \newline
+AC-024.3: Registro guardado localmente sin conexi\'on. \newline
+AC-024.4: Campo \texttt{datos\_campo\_completos} (bool) indica si se proporcionaron los campos biol\'ogicos opcionales. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-025} \criticomark} \\
+\hline
+Nombre & Almacenamiento local con pol\'itica de purga \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app deber\'a almacenar observaciones en SQLite/Room local. Una vez sincronizada y validada, elimina las fotos originales de alta resoluci\'on y conserva solo metadatos y thumbnail ($\leq$200$\times$200 px). \\
+\hline
+Fuente & CR-03. \\
+\hline
+Prioridad & Alta \\
+\hline
+Criterios de Aceptaci\'on &
+AC-025.1: Cierre forzado durante guardado: registro conservado al reiniciar. \newline
+AC-025.2: BD local $\geq$10,000 registros sin degradaci\'on. \newline
+AC-025.3: Fotos purgadas post-sincronizaci\'on+validaci\'on; thumbnail conservado. \newline
+AC-025.4: Thumbnail visible en historial de observaciones purgadas. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-026} \criticomark} \\
+\hline
+Nombre & Sincronizaci\'on autom\'atica diferida \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app deber\'a sincronizar observaciones pendientes al recuperar conexi\'on, sin intervenci\'on del usuario. Reintento con retroceso exponencial (m\'ax. 5). Pol\'itica de merge: campos de validaci\'on desde servidor (fuente de verdad); campo \texttt{notas} concatenado. Notificaci\'on: ``Tu observaci\'on fue actualizada. Tus notas han sido conservadas.'' \\
+\hline
+Fuente & CRISP-DM Fase 6. \\
+\hline
+Prioridad & Alta \\
+\hline
+Criterios de Aceptaci\'on &
+AC-026.1: Sincronizaci\'on en $\leq$2 minutos al recuperar conexi\'on. \newline
+AC-026.2: Sin duplicados en servidor. \newline
+AC-026.3: Conflicto: campos validaci\'on desde servidor; \texttt{notas} concatenado. \newline
+AC-026.4: Notificaci\'on enviada al Guardaparque. \\
+\hline
+\end{longtable}
+
+% --- NUEVO RF-060 (Cola de sincronización asíncrona) ---
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-060} \criticomark} \\
+\hline
+Nombre & Cola de sincronización asíncrona de registros \\
+\hline
+Obligatoriedad & \textbf{deberá} \\
+\hline
+Descripción & El sistema debe implementar una cola de sincronización local. Los registros creados en campo se marcarán como \texttt{‘Pendientes’}. Una vez que el dispositivo detecte una conexión estable (WiFi/4G), el sistema deberá subir los datos y las imágenes al API Backend y, opcionalmente, enviar la imagen a Hugging Face/Servidor Central solo para procesos de re-entrenamiento o validación por expertos. \\
+\hline
+Rationale & Asegura la entrega ordenada de observaciones y permite enriquecer el dataset futuro sin depender de sincronización manual. \\
+\hline
+Fuente & Arquitectura Offline-First. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificación & Interrumpir la red durante la sincronización; verificar que los registros quedan en cola y se reintentan automáticamente. \\
+\hline
+Stakeholder & Guardaparque, Administrador \\
+\hline
+Criterios de Aceptación &
+AC-060.1: Cada registro local tiene un estado de sincronización (pendiente/enviado). \newline
+AC-060.2: Al conectar, los registros pendientes se envían en orden cronológico ascendente. \newline
+AC-060.3: Si la sincronización se interrumpe, el sistema reintenta al recuperar la conexión. \newline
+AC-060.4: Solo cuando el registro se confirma en el servidor, se marca como enviado. \newline
+AC-060.5: El envío opcional a servidor de reentrenamiento no bloquea la sincronización principal. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-027}} \\
+\hline
+Nombre & Edici\'on de observaciones propias \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & La app deber\'ia permitir al Guardaparque editar sus propios registros no validados: especie, notas, estado del individuo y datos biol\'ogicos de campo. \\
+\hline
+Fuente & \inferido{} \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-027.1: Guardaparque edita observaci\'on no validada. \newline
+AC-027.2: Observaci\'on validada no puede ser editada por el Guardaparque. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-028}} \\
+\hline
+Nombre & Historial de observaciones del Guardaparque \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app deber\'a mostrar al Guardaparque su historial con filtros por fecha, especie y estado de validaci\'on. Observaciones purgadas muestran thumbnail. \\
+\hline
+Fuente & \inferido{} \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-028.1: Historial ordenado por fecha descendente. \newline
+AC-028.2: Filtro por estado de validaci\'on funcional (pendiente/validada/corregida). \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-029}} \\
+\hline
+Nombre & Exportaci\'on de registros a CSV \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & El sistema deber\'ia permitir exportar observaciones filtradas en CSV (app: Guardaparque; web: Validador/Administrador), incluyendo \texttt{precision\_gps\_m} y datos biol\'ogicos de campo. \\
+\hline
+Fuente & \inferido{} \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-029.1: CSV incluye todos los campos del registro. \newline
+AC-029.2: Archivo guardado en almacenamiento accesible al usuario. \\
+\hline
+\end{longtable}
+
+%-------------------------------------------
+\subsection{M\'odulo 6: Validaci\'on por el Validador}
+%-------------------------------------------
+
+\textit{Plataforma: Plataforma web exclusivamente (Actor 2 -- Validador).}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-030} \criticomark} \\
+\hline
+Nombre & Dashboard web de observaciones pendientes de validaci\'on \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La plataforma web deber\'a mostrar al Validador un dashboard con todas las observaciones pendientes de validaci\'on, con: miniatura de foto, especie identificada por la CNN, nombre del Guardaparque, puesto de control, fecha/hora, coordenadas GPS y margen de error, estado fenol\'ogico, datos biol\'ogicos de campo, respuestas al flujo de preguntas guiadas (si aplica). Ordenadas por fecha; filtros por puesto, especie, estado y tipo (normal / flujo asistido / no identificada). \\
+\hline
+Rationale & El Validador revisa el trabajo de 40 guardaparques desde su estaci\'on de trabajo web. Necesita toda la informaci\'on biol\'ogica en una sola vista para tomar decisiones informadas. \\
+\hline
+Fuente & ANEXO 2 (sobrecarga de validaci\'on). Ref. 10. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba funcional web con 20 observaciones de distintos tipos. \\
+\hline
+Stakeholder & Validador \\
+\hline
+Criterios de Aceptaci\'on &
+AC-030.1: Dashboard muestra todos los campos por observaci\'on. \newline
+AC-030.2: Filtros por puesto, especie, estado y tipo funcionales. \newline
+AC-030.3: Lista actualizada al sincronizarse nuevas observaciones. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-031} \criticomark} \\
+\hline
+Nombre & Aprobar, corregir o rechazar identificaciones (Web) \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La plataforma web deber\'a permitir al Validador: aprobar, corregir (seleccionando especie del cat\'alogo de 16) o rechazar (con justificaci\'on $\geq$10 caracteres) cada observaci\'on. Toda acci\'on registrada con timestamp y usuario. \\
+\hline
+Fuente & ANEXO 2. CRISP-DM Fase 5. \\
+\hline
+Prioridad & Alta \\
+\hline
+Criterios de Aceptaci\'on &
+AC-031.1: Aprobaci\'on: marca ``Validado'' con nombre del Validador y fecha. \newline
+AC-031.2: Correcci\'on: registra especie original del Guardaparque y especie corregida. \newline
+AC-031.3: Rechazo: justificaci\'on obligatoria $\geq$10 caracteres. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-032}} \\
+\hline
+Nombre & Comentarios t\'ecnicos por observaci\'on (Web) \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & La plataforma web deber\'ia permitir al Validador a\~nadir comentarios t\'ecnicos sobre caracter\'isticas morfol\'ogicas (labelo, florecimiento, hojas) para retroalimentar al Guardaparque. \\
+\hline
+Fuente & ANEXO 2. \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-032.1: Guardaparque ve el comentario en su historial de la app. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-033}} \\
+\hline
+Nombre & Notificaci\'on de resultado de validaci\'on (App) \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & La app deber\'ia notificar al Guardaparque cuando una observaci\'on haya sido validada, corregida o rechazada desde la plataforma web. \\
+\hline
+Fuente & \inferido{} \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-033.1: Al sincronizarse, Guardaparque recibe notificaci\'on con resultado. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-034}} \\
+\hline
+Nombre & Estad\'isticas de precisi\'on por Guardaparque (Web) \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & La plataforma web deber\'ia mostrar al Validador estad\'isticas de precisi\'on por Guardaparque: tasa de acierto, especies con m\'as errores, tasa de activaci\'on del flujo asistido y tendencia temporal. \\
+\hline
+Fuente & CRISP-DM Fase 5. \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-034.1: Tasa de acierto por Guardaparque en per\'iodo seleccionado. \newline
+AC-034.2: Las 3 especies con mayor tasa de error por Guardaparque. \\
+\hline
+\end{longtable}
+
+%-------------------------------------------
+\subsection{M\'odulo 7: Mapa de Observaciones}
+%-------------------------------------------
+
+\textit{Plataforma: App m\'ovil (visualizaci\'on b\'asica offline) + Plataforma web (mapa interactivo con zonas de inter\'es).}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-035} \criticomark} \\
+\hline
+Nombre & Mapa de observaciones georreferenciadas (App m\'ovil) \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app m\'ovil deber\'a mostrar un mapa del SHMP con:\newline
+\textbf{(a)} Puntos georreferenciados de las observaciones del Guardaparque, con color diferenciado por estado de validaci\'on (pendiente: gris, validado: verde, corregido: azul, rechazado: rojo).\newline
+\textbf{(b)} Puntos con \texttt{precision\_gps\_m} $>$10m muestran radio de incertidumbre.\newline
+\textbf{(c)} Capa de \textbf{zonas de inter\'es del SHMP}: sectores principales (Aguas Calientes, Camino Inca, zona arqueol\'ogica, bosque montano) como pol\'igonos informativos que el Guardaparque puede consultar para orientarse. \\
+\hline
+Rationale & El mapa permite al Guardaparque visualizar su trabajo de campo en contexto geogr\'afico, identificar zonas de alta densidad de observaciones propias y orientarse en el terreno. \\
+\hline
+Fuente & ANEXO 2. Bot\'anico especialista. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba funcional con 20 observaciones georreferenciadas. \\
+\hline
+Stakeholder & Guardaparque \\
+\hline
+Criterios de Aceptaci\'on &
+AC-035.1: Puntos visibles con diferenciaci\'on de color por estado de validaci\'on. \newline
+AC-035.2: Tap en punto: resumen de la observaci\'on (especie, fecha, estado). \newline
+AC-035.3: Puntos de baja precisi\'on GPS muestran radio de incertidumbre. \newline
+AC-035.4: Capa de zonas de inter\'es visible como capa activable/desactivable. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-052} \criticomark} \\
+\hline
+Nombre & Mapa interactivo de observaciones con zonas de inter\'es (Plataforma web) \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La plataforma web deber\'a mostrar al Validador y al Administrador un mapa interactivo del SHMP con:\newline
+\textbf{(a)} Todos los puntos de observaci\'on georreferenciados con diferenciaci\'on de color por estado de validaci\'on y especie.\newline
+\textbf{(b)} Capas de \textbf{zonas de inter\'es}: sectores del Santuario, los 7 puestos de control del SERNANP (con nombre y guardaparques asignados), rutas de patrullaje principales.\newline
+\textbf{(c)} Filtros por especie, rango de fechas, puesto de control y estado de validaci\'on.\newline
+\textbf{(d)} Al seleccionar un punto: vista detallada de la observaci\'on con fotograf\'ia, datos de campo y estado de validaci\'on. \\
+\hline
+Rationale & El Validador necesita visualizar la distribuci\'on geogr\'afica de las observaciones en contexto del Santuario, los puestos de control y las rutas, para tomar decisiones sobre la cobertura del monitoreo. \\
+\hline
+Fuente & ANEXO 2. Ref. 10. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba funcional web con $\geq$50 observaciones de distintas zonas. \\
+\hline
+Stakeholder & Validador, Administrador \\
+\hline
+Criterios de Aceptaci\'on &
+AC-052.1: Mapa renderiza en $\leq$5 segundos con $\leq$500 observaciones. \newline
+AC-052.2: Puntos con diferenciaci\'on de color por estado y especie. \newline
+AC-052.3: Capa de puestos de control visible y activable independientemente. \newline
+AC-052.4: Filtros de especie y per\'iodo actualizan el mapa din\'amicamente. \newline
+AC-052.5: Clic en punto: vista detallada de la observaci\'on. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-036}} \\
+\hline
+Nombre & Filtrado de observaciones en mapa (App y Web) \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & El mapa (app y web) deber\'ia permitir filtrar por especie, rango de fechas, puesto de control y estado de validaci\'on. \\
+\hline
+Fuente & \inferido{} \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-036.1: Filtro por especie muestra solo observaciones de esa especie. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-037} \criticomark} \\
+\hline
+Nombre & Georreferenciaci\'on autom\'atica con degradaci\'on elegante \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app deber\'a obtener coordenadas GPS autom\'aticamente al crear una observaci\'on. Si en 30s no alcanza $\leq$10m de precisi\'on, aplica degradaci\'on elegante (AC-024.2). GPS activado solo bajo demanda (RNF-020). \\
+\hline
+Fuente & ANEXO 2. \\
+\hline
+Prioridad & Alta \\
+\hline
+Criterios de Aceptaci\'on &
+AC-037.1: GPS intentado en $\leq$30s. \newline
+AC-037.2: GPS no disponible: notifica y permite continuar sin coordenadas. \newline
+AC-037.3: Precisi\'on $>$10m antes de 30s: aplica degradaci\'on elegante de AC-024.2. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-038}} \\
+\hline
+Nombre & Mapa b\'asico offline con l\'imite de zoom (App) \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & La app deber\'ia almacenar en cach\'e los tiles del mapa del SHMP hasta \textbf{Zoom Level 15/16 m\'aximo} ($\leq$50 MB) para visualizaci\'on offline. Zoom superior muestra mensaje informativo. \\
+\hline
+Fuente & CR-04. \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-038.1: Mapa visible offline con observaciones locales. \newline
+AC-038.2: Cach\'e no supera ZL 16. \newline
+AC-038.3: Peso cach\'e $\leq$50 MB. \newline
+AC-038.4: Zoom $>$16 offline: mensaje informativo. \\
+\hline
+\end{longtable}
+
+%-------------------------------------------
+\subsection{M\'odulo 8: Reportes e Informes}
+%-------------------------------------------
+
+\textit{Plataforma: Plataforma web (generaci\'on y exportaci\'on) + App m\'ovil (encuesta de usabilidad).}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-039}} \\
+\hline
+Nombre & Generaci\'on de informe de monitoreo (Web) \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & La plataforma web deber\'ia generar informes por puesto de control y per\'iodo: especies observadas, cantidad de registros, tasa de identificaci\'on correcta, tasa de activaci\'on del flujo asistido, reportes de especie no identificada y mapa de puntos. \\
+\hline
+Fuente & ANEXO 2. \\
+\hline
+Prioridad & Alta \\
+\hline
+Criterios de Aceptaci\'on &
+AC-039.1: Informe generado en $\leq$10 segundos con $\leq$200 observaciones. \newline
+AC-039.2: Incluye todos los campos definidos. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-040}} \\
+\hline
+Nombre & Exportaci\'on de informes en PDF (Web) \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & La plataforma web deber\'ia exportar informes en PDF con datos georreferenciados para reportes institucionales del SERNANP. \\
+\hline
+Fuente & ANEXO 2. \\
+\hline
+Prioridad & Alta \\
+\hline
+Criterios de Aceptaci\'on &
+AC-040.1: PDF v\'alido, legible en cualquier visor. \newline
+AC-040.2: PDF incluye mapa del SHMP con puntos del per\'iodo. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-041}} \\
+\hline
+Nombre & M\'etricas de uso y precisi\'on del sistema (Web) \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & La plataforma web deber\'ia mostrar al Validador y Administrador: tasa de acierto global del modelo, tasa de activaci\'on del flujo asistido por especie, tiempo promedio de identificaci\'on, n\'umero de reportes de especie desconocida y tendencia mensual. \\
+\hline
+Fuente & CRISP-DM Fase 5. \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-041.1: Panel muestra tasa de acierto global y tiempo promedio. \newline
+AC-041.2: Panel muestra tasa de activaci\'on del flujo asistido por especie. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-042}} \\
+\hline
+Nombre & Encuesta de usabilidad (App) \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & La app deber\'ia mostrar encuesta corta (5 preguntas Likert 1--5) una vez por d\'ia al primer cierre de sesi\'on, si se registraron $\geq$3 observaciones esa jornada. Resultados agrupados en panel web del Administrador. \\
+\hline
+Fuente & ANEXO 2 (Objetivo espec\'ifico 5). \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-042.1: Encuesta aparece en jornadas con $\geq$3 observaciones. \newline
+AC-042.2: Resultados visibles en panel del Administrador. \\
+\hline
+\end{longtable}
+
+%-------------------------------------------
+\subsection{M\'odulo 9: Administraci\'on del Sistema}
+%-------------------------------------------
+
+\textit{Plataforma: Plataforma web exclusivamente (Actor 4 -- Administrador).}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-043} \criticomark} \\
+\hline
+Nombre & Gesti\'on de usuarios CRUD (Administrador -- Web) \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La plataforma web deber\'a permitir al Administrador (\'unico actor autorizado) crear, leer, actualizar y desactivar cuentas de usuario para los 4 roles, asignar y cambiar roles, y reasignar puestos de control para los 40 guardaparques en 7 puestos del SHMP. Los datos del formulario de creaci\'on se env\'ian en JSON al API Backend (HTTP 201 -- Ref. 10, RF-01). \\
+\hline
+Fuente & ANEXO 2 (40 guardaparques, 7 puestos). Ref. 10. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba de cada operaci\'on CRUD desde la web + verificaci\'on en BD PostgreSQL. \\
+\hline
+Stakeholder & Administrador \\
+\hline
+Criterios de Aceptaci\'on &
+AC-043.1: Administrador crea, edita y desactiva usuarios desde la web. \newline
+AC-043.2: Usuario desactivado no puede iniciar sesi\'on en ninguna plataforma. \newline
+AC-043.3: Cambio de rol aplicado en pr\'oximo inicio de sesi\'on del usuario. \newline
+AC-043.4: Contrase\~nas almacenadas con hash Bcrypt en PostgreSQL (no texto plano -- Ref. 10, RNF-03). \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-044} \criticomark} \\
+\hline
+Nombre & Actualizaci\'on OTA del modelo CNN con reanudaci\'on de descarga \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La plataforma web deber\'a permitir al Administrador subir nueva versi\'on del modelo .tflite. La app deber\'a descargarlo y aplicarlo sin reinstalaci\'on. Modelo anterior conservado como respaldo. La descarga OTA soporta reanudaci\'on ante cortes de red (CR-05). \\
+\hline
+Fuente & CR-05. CRISP-DM Fase 6. \\
+\hline
+Prioridad & Alta \\
+\hline
+Criterios de Aceptaci\'on &
+AC-044.1: Administrador sube .tflite desde panel web. \newline
+AC-044.2: Dispositivos descargan nuevo modelo al conectarse. \newline
+AC-044.3: Versi\'on anterior almacenada como respaldo local. \newline
+AC-044.4: Descarga interrumpida reanuda desde el punto de interrupci\'on. \newline
+AC-044.5: Descarga verificada con checksum SHA-256 activa autom\'aticamente el nuevo modelo. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-045}} \\
+\hline
+Nombre & Gesti\'on del cat\'alogo de 16 especies (Web) \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La plataforma web deber\'a permitir al Administrador agregar nuevas especies (con 11 atributos Ochoa + atributos visuales), editar fichas y actualizar el cat\'alogo en todos los dispositivos mediante sincronizaci\'on. \\
+\hline
+Fuente & CRISP-DM Fase 6. \\
+\hline
+Prioridad & Alta \\
+\hline
+Criterios de Aceptaci\'on &
+AC-045.1: Nueva especie a\~nadida desde web aparece en cat\'alogo de todos los dispositivos tras sincronizaci\'on. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-046}} \\
+\hline
+Nombre & Panel de estad\'isticas globales del sistema (Administrador -- Web) \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & La plataforma web deber\'ia mostrar al Administrador: usuarios activos por rol, observaciones totales y pendientes de validaci\'on, tasa de sincronizaci\'on, versi\'on del modelo en uso, porcentaje de almacenamiento por dispositivo, reportes de especie desconocida pendientes y errores del sistema o del API Backend. \\
+\hline
+Fuente & \inferido{}. Ref. 10 (monitoreo del API). \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-046.1: Panel muestra en tiempo real usuarios activos y observaciones pendientes de sincronizaci\'on. \newline
+AC-046.2: Panel muestra reportes de especie desconocida pendientes de revisi\'on. \newline
+AC-046.3: Versi\'on del modelo activo visible. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-047} \criticomark} \\
+\hline
+Nombre & Consentimiento de privacidad en primer uso \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La app deber\'a mostrar pantalla de consentimiento informado (Ley N.° 29733) en el primer inicio. La plataforma web deber\'a mostrar aviso de privacidad en el primer acceso. Sin aceptaci\'on: acceso bloqueado en ambas plataformas. \\
+\hline
+Fuente & ANEXO 2 (Componente \'Etico). \\
+\hline
+Prioridad & Alta \\
+\hline
+Criterios de Aceptaci\'on &
+AC-047.1: App primer inicio: consentimiento antes de cualquier funcionalidad. \newline
+AC-047.2: Web primer acceso: aviso de privacidad. \newline
+AC-047.3: Sin aceptaci\'on: acceso bloqueado. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-048}} \\
+\hline
+Nombre & Manual de usuario integrado \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & La app deber\'ia incluir manual integrado offline con gu\'ias del flujo principal y del flujo asistido. La plataforma web deber\'ia incluir secci\'on de ayuda en l\'inea. \\
+\hline
+Fuente & ANEXO 2 (Resultado esperado 7). \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-048.1: Manual app accesible offline desde men\'u de ayuda. \newline
+AC-048.2: Ayuda web accesible desde navegador. \\
+\hline
+\end{longtable}
+
+%-------------------------------------------
+\subsection{M\'odulo 10: Revisi\'on de Reportes de Especie Desconocida (Bot\'anico -- Web)}
+%-------------------------------------------
+
+\textit{Plataforma: Plataforma web exclusivamente (Actor 3 -- Bot\'anico).}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-055} \criticomark} \\
+\hline
+Nombre & Cola web de reportes de especie no identificada (Bot\'anico) \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La plataforma web deber\'a proveer al Bot\'anico una cola de revisi\'on de reportes de especie no identificada (RF-051). Para cada reporte, el Bot\'anico ver\'a: todas las fotograf\'ias de m\'ultiples \'angulos, respuestas del Guardaparque a las preguntas guiadas, coordenadas GPS, fecha/hora, estado fenol\'ogico, datos de campo y vector de probabilidades del \'ultimo intento CNN. El Bot\'anico podr\'a:\newline
+(a) Asignar el reporte a una de las 16 especies del cat\'alogo.\newline
+(b) Descartar el reporte (imagen insuficiente para determinar la especie).\newline
+(c) Marcar como ``Posible nueva especie -- requiere an\'alisis ex-situ''. \\
+\hline
+Rationale & El Bot\'anico es el \'unico actor capacitado para determinar si un reporte corresponde a una especie ya catalogada, una variante morfol\'ogica o una especie potencialmente nueva para el SHMP. \\
+\hline
+Fuente & Bot\'anico especialista. RF-051. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba con cola de 5 reportes de distintos tipos. \\
+\hline
+Stakeholder & Bot\'anico \\
+\hline
+Criterios de Aceptaci\'on &
+AC-055.1: Cola ordenada por prioridad (alertas ``Posible Nueva Especie'' primero). \newline
+AC-055.2: Vista detalle: todas las im\'agenes, respuestas a preguntas y vector CNN. \newline
+AC-055.3: Bot\'anico puede asignar especie, descartar o marcar como nueva; acci\'on registrada con timestamp. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-056}} \\
+\hline
+Nombre & Tendencias temporales por especie (Bot\'anico/Validador -- Web) \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & La plataforma web deber\'ia mostrar gr\'aficos de tendencia temporal de observaciones por especie: distribuci\'on mensual de avistamientos y \'epoca de floraci\'on observada vs. esperada seg\'un ficha Ochoa. \\
+\hline
+Fuente & Bot\'anico especialista. RNF-019. \\
+\hline
+Prioridad & Media \\
+\hline
+Criterios de Aceptaci\'on &
+AC-056.1: Gr\'afico mensual por especie renderiza correctamente. \newline
+AC-056.2: \'Epoca observada vs. esperada visible en el mismo gr\'afico. \\
+\hline
+\end{longtable}
+
+%-------------------------------------------
+\subsection{RF relacionados con el API Backend}
+%-------------------------------------------
+
+\textit{Los siguientes RF derivan directamente del documento de arquitectura del equipo web (Ref. 10) y formalizan los requerimientos de la capa de integraci\'on.}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-057} \criticomark} \\
+\hline
+Nombre & Compatibilidad estricta del API con la App M\'ovil \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & El API Backend (Node.js + Express) deber\'a exponer \textit{endpoints} con estructuras de datos JSON id\'enticas a las que la app m\'ovil espera recibir, de modo que el cliente m\'ovil funcione sin detectar cambios. Cualquier nueva funcionalidad del API se agrega como \textit{endpoint} adicional sin modificar los existentes. \\
+\hline
+Rationale & El c\'odigo de la app m\'ovil es el cliente base del sistema. El dise\~no de las respuestas del API est\'a dictado por lo que la app necesita (Ref. 10, secci\'on 6). \\
+\hline
+Fuente & Ref. 10 (RF-02, secci\'on 3.2). \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Pruebas de integraci\'on: peticiones id\'enticas a las de la app m\'ovil al API retornan respuestas 100\% compatibles. \\
+\hline
+Stakeholder & Equipo de desarrollo web y m\'ovil \\
+\hline
+Criterios de Aceptaci\'on &
+AC-057.1: Petici\'on de la app m\'ovil al nuevo API: respuesta id\'entica a la esperada por el cliente m\'ovil. \newline
+AC-057.2: No se modifican \textit{endpoints} existentes al a\~nadir nueva funcionalidad. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RF-058} \criticomark} \\
+\hline
+Nombre & Comunicaci\'on React $\leftrightarrow$ API en formato JSON \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La plataforma web (React.js) deber\'a enviar todos los datos de sus formularios al API Backend en formato JSON mediante Axios/Fetch API. El API deber\'a retornar HTTP 201 (Creado) ante peticiones POST exitosas de creaci\'on de recursos. \\
+\hline
+Fuente & Ref. 10 (RF-01). \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Inspecci\'on de red (DevTools): petici\'on POST desde React retorna HTTP 201. \\
+\hline
+Criterios de Aceptaci\'on &
+AC-058.1: POST de formulario React: API retorna HTTP 201 con el recurso creado. \newline
+AC-058.2: Validaci\'on en tiempo real en el navegador antes de enviar (campos obligatorios, formato email). \\
+\hline
+\end{longtable}
+
+%=============================================================
+\section{Requerimientos no funcionales}
+%=============================================================
+
+Clasificados seg\'un ISO/IEC 25010:2011.
+
+\subsection{Desempe\~no y eficiencia}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-001} \criticomark} \\
+\hline
+Categor\'ia & Eficiencia de desempe\~no -- App m\'ovil \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Tiempo total de identificaci\'on (captura confirmada $\rightarrow$ resultados) $\leq$5 segundos en dispositivo con 2 GB RAM y procesador octa-core 1.8 GHz. \\
+\hline
+Fuente & ANEXO 2 (Hip\'otesis 2). \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba de rendimiento con 10 iteraciones; registrar promedio y m\'aximo. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-002} \criticomark} \\
+\hline
+Categor\'ia & Eficiencia de desempe\~no -- App m\'ovil \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Cat\'alogo de 16 especies carga en $\leq$3 segundos; navegaci\'on entre fichas en $\leq$0.5 segundos. \\
+\hline
+Fuente & \inferido{} \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba de rendimiento con cat\'alogo de 16 especies. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-021} \criticomark} \\
+\hline
+Categor\'ia & Eficiencia de desempe\~no -- Plataforma web \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & La plataforma web deber\'a cumplir en conexi\'on de 10 Mbps:\newline
+(a) Dashboard de validaci\'on ($\leq$50 observaciones): $\leq$3 segundos.\newline
+(b) Mapa interactivo ($\leq$500 observaciones): $\leq$5 segundos.\newline
+(c) Exportaci\'on de informe PDF ($\leq$200 observaciones): $\leq$15 segundos. \\
+\hline
+Fuente & \inferido{} -- Nielsen Norman Group ($\leq$10s para tareas complejas). \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba con Lighthouse/WebPageTest en conexi\'on simulada de 10 Mbps. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-003}} \\
+\hline
+Categor\'ia & Capacidad -- Backend servidor \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & El API Backend deber\'ia soportar: 40 dispositivos m\'oviles con sincronizaciones en lotes diferidos + hasta 5 usuarios web concurrentes (Validador/Bot\'anico/Admin), dentro del presupuesto de S/.500 para servidor. \\
+\hline
+Fuente & ANEXO 3. Ref. 10 (RNF-02). \\
+\hline
+Prioridad & Media \\
+\hline
+Verificaci\'on & Prueba de carga: 10 dispositivos sincronizando + 3 usuarios web concurrentes sin bloqueos en PostgreSQL. \\
+\hline
+\end{longtable}
+
+\subsection{Usabilidad}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-004} \criticomark} \\
+\hline
+Categor\'ia & Usabilidad -- Operabilidad -- App m\'ovil \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Interfaz operable con una sola mano; elementos interactivos del flujo principal en mitad inferior de la pantalla (zona del pulgar). \\
+\hline
+Fuente & \inferido{} \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Heur\'isticas Nielsen + prueba con 5 guardaparques. Criterio: \'exito $\geq$90\% con una mano. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-005} \criticomark} \\
+\hline
+Categor\'ia & Usabilidad -- Aprendizaje -- App m\'ovil \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Flujo principal en m\'aximo 3 pasos (abrir $\rightarrow$ capturar $\rightarrow$ ver resultado). Flujo asistido: cada pregunta guiada es un paso adicional claramente numerado. \\
+\hline
+Fuente & CRISP-DM Fase 1. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Task flow analysis + prueba primer uso sin entrenamiento. Criterio: identificaci\'on completa en $\leq$5 minutos. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-006} \criticomark} \\
+\hline
+Categor\'ia & Usabilidad -- Accesibilidad -- App m\'ovil \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Botones t\'actiles $\geq$48$\times$48 dp; espaciado m\'inimo 8 dp entre elementos (uso con guantes de campo). \\
+\hline
+Fuente & \inferido{} -- Material Design de Google. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Accessibility Scanner de Android. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-007}} \\
+\hline
+Categor\'ia & Usabilidad -- Internacionalizaci\'on + Paleta corporativa \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Interfaz principal en espa\~nol. Nombres en quechua e ingl\'es con \'icono diferenciador. La plataforma web deber\'a implementar la \textbf{paleta de colores corporativa} definida por el equipo web (colores base: \texttt{\#757B47} y \texttt{\#FEFAE0} y tonos complementarios), superando puntuaci\'on de accesibilidad $>$90/100 en Google Lighthouse (Ref. 10, RNF-01). \\
+\hline
+Fuente & \inferido{}. Ref. 10 (RNF-01). \\
+\hline
+Prioridad & Media \\
+\hline
+Verificaci\'on & Audit\'ia Lighthouse en la plataforma web. Inspecci\'on de pantallas en app. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-008}} \\
+\hline
+Categor\'ia & Usabilidad -- Accesibilidad visual -- App m\'ovil \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & Modo de alto contraste activable; contraste $\geq$4.5:1 (WCAG 2.1 AA) para uso bajo luz solar directa en el SHMP. \\
+\hline
+Fuente & \inferido{} \\
+\hline
+Prioridad & Media \\
+\hline
+Verificaci\'on & Prueba de contraste + prueba en campo con luz solar. \\
+\hline
+\end{longtable}
+
+\subsection{Fiabilidad}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-009} \criticomark} \\
+\hline
+Categor\'ia & Fiabilidad -- Disponibilidad -- App m\'ovil \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & El 100\% de las funcionalidades de captura, identificaci\'on (incluyendo flujo asistido RF-049/050), cat\'alogo, mapa y registro deber\'an estar disponibles sin conexi\'on. \\
+\hline
+Fuente & CRISP-DM Fase 1. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba completa en modo avi\'on (20 identificaciones, incluyendo flujo asistido). \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-010} \criticomark} \\
+\hline
+Categor\'ia & Fiabilidad -- Recuperabilidad -- App m\'ovil \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Guardado autom\'atico de observaciones en progreso. Cero observaciones perdidas ante cierre inesperado, p\'erdida de bater\'ia o almacenamiento lleno. \\
+\hline
+Fuente & \inferido{} \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Inyecci\'on de fallos: cierre forzado durante 10 creaciones. Criterio: 0 observaciones perdidas. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-011}} \\
+\hline
+Categor\'ia & Fiabilidad -- Tolerancia a fallos -- App m\'ovil + Backend \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Sincronizaci\'on con retroceso exponencial, m\'ax. 5 reintentos. Observaciones locales hasta confirmaci\'on del servidor. Descarga OTA del modelo soporta reanudaci\'on (RF-044). \\
+\hline
+Fuente & \inferido{} \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba con desconexiones simuladas en sincronizaci\'on y descarga OTA. \\
+\hline
+\end{longtable}
+
+\subsection{Seguridad}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-012} \criticomark} \\
+\hline
+Categor\'ia & Seguridad -- Privacidad -- App m\'ovil + Web \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Sin recolecci\'on de datos sin consentimiento expl\'icito (Ley N.° 29733). Consentimiento en primer inicio (app) y primer acceso (web). \\
+\hline
+Fuente & ANEXO 2 (Componente \'Etico). \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Inspecci\'on de c\'odigo + revisi\'on legal. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-013} \criticomark} \\
+\hline
+Categor\'ia & Seguridad -- Confidencialidad -- App m\'ovil \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Datos locales cifrados con Android Keystore + AES-256: observaciones, GPS, fotos y datos de sesi\'on. \\
+\hline
+Fuente & Ley N.° 29733. ANEXO 2. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Extracci\'on BD local: verificar ilegibilidad sin clave Keystore. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-014} \criticomark} \\
+\hline
+Categor\'ia & Seguridad -- Integridad -- App + Web + Backend \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Comunicaciones con el servidor via HTTPS/TLS. Contrase\~nas hasheadas con \textbf{Bcrypt} en PostgreSQL (factor $\geq$10) -- el hash es irreversible, no texto plano (Ref. 10, RNF-03). El API Backend deber\'a implementar pol\'iticas CORS y validar JWT en cada petici\'on protegida; sin token v\'alido: HTTP 401 (Ref. 10, RF-03). La plataforma web deber\'a implementar protecci\'on CSRF y cabeceras de seguridad (CSP, HSTS, X-Frame-Options). \\
+\hline
+Fuente & \inferido{}. Ref. 10 (RF-03, RNF-03). \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & An\'alisis de tr\'afico + inspecci\'on BD (campo contrase\~na: hash Bcrypt, no texto plano) + prueba de petici\'on sin JWT (HTTP 401). \\
+\hline
+\end{longtable}
+
+\subsection{Interoperabilidad}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-022} \criticomark} \\
+\hline
+Categor\'ia & Interoperabilidad -- App m\'ovil $\leftrightarrow$ Web $\leftrightarrow$ Backend \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & El API Backend (Node.js) deber\'a soportar lecturas/escrituras simult\'aneas de la plataforma web y de la app m\'ovil sin conflictos en PostgreSQL. Las peticiones concurrentes de ambos clientes no deber\'an generar bloqueos en la base de datos. \\
+\hline
+Fuente & Ref. 10 (RNF-02). \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba de carga: peticiones concurrentes desde app m\'ovil y navegador web sin bloqueos en PostgreSQL. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-023} \criticomark} \\
+\hline
+Categoría & Eficiencia de Memoria -- Optimización del Modelo IA \\
+\hline
+Obligatoriedad & \textbf{deberá} \\
+\hline
+Descripción & El modelo de IA (TensorFlow Lite) debe ser sometido a un proceso de cuantización de pesos (Int8) para reducir su tamaño y consumo de memoria RAM, garantizando que el proceso de inferencia no exceda los 150 MB de uso de memoria activa, permitiendo así la multitarea en dispositivos con 2 GB de RAM. \\
+\hline
+Fuente & Arquitectura Edge AI y restricciones de hardware. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificación & Perfilado de memoria durante 20 inferencias consecutivas; consumo pico ≤150 MB en dispositivo con 2 GB RAM. \\
+\hline
+\end{longtable}
+
+
+\subsection{Portabilidad}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-015} \criticomark} \\
+\hline
+Categor\'ia & Portabilidad -- Adaptabilidad -- App m\'ovil \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & Compatible con Android 8.0 (API 26)+; 2 GB RAM; 16 GB almacenamiento. \\
+\hline
+Fuente & ANEXO 2. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & Prueba en Android 8.0, 10 y 13. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-016}} \\
+\hline
+Categor\'ia & Portabilidad -- Instalabilidad -- App m\'ovil + Web \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & App distribuida como APK sin Google Play Store. Plataforma web compatible con Chrome/Firefox/Edge (\'ultimas 2 versiones principales) sin instalaci\'on adicional. \\
+\hline
+Fuente & \inferido{}. Ref. 10. \\
+\hline
+Prioridad & Media \\
+\hline
+Verificaci\'on & Instalaci\'on APK sin cuenta Google. Prueba web en los 3 navegadores. \\
+\hline
+\end{longtable}
+
+\subsection{Mantenibilidad}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-017}} \\
+\hline
+Categor\'ia & Mantenibilidad -- Modularidad -- App + Web + Backend \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & App: capas separadas (UI, dominio, datos, IA). Web: componentes desacoplados (React, Node.js/Express, PostgreSQL). A\~nadir una especie al cat\'alogo (hasta 17+) no requiere modificar c\'odigo, solo datos. \\
+\hline
+Fuente & CRISP-DM Fase 6. Ref. 10. \\
+\hline
+Prioridad & Media \\
+\hline
+Verificaci\'on & Revisi\'on de arquitectura con diagrama de capas. \\
+\hline
+\end{longtable}
+
+\subsection{Calidad del Modelo IA}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-018} \criticomark} \\
+\hline
+Categor\'ia & Calidad del modelo CNN -- 16 especies \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & El modelo CNN sobre las 16 especies deber\'a alcanzar:\newline
+(a) \textbf{Accuracy global $\geq$85\%} sobre el dataset de prueba (15\% del total).\newline
+(b) \textbf{Precision por especie $\geq$70\%}: ninguna especie con precision $<$70\%, cr\'itico para esp. CR/EN.\newline
+(c) \textbf{Tasa de error en campo $<$10\%} en pruebas con guardaparques. \\
+\hline
+Fuente & ANEXO 2 (Hip\'otesis 1). CRISP-DM Fase 4. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & (a) Matriz de confusi\'on 16 clases. (b) Classification report con precision por clase. (c) 10 guardaparques $\times$ 30 espec\'imenes. \\
+\hline
+\end{longtable}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-019} \textit{(Reubicado desde RF-016)}} \\
+\hline
+Categor\'ia & Calidad del modelo -- Cobertura fenol\'ogica \\
+\hline
+Obligatoriedad & \textbf{deber\'ia} \\
+\hline
+Descripci\'on & El modelo deber\'ia reconocer estados fenol\'ogicos (floraci\'on, crecimiento, marchito). Condicionado a $\geq$200 im\'agenes etiquetadas por estado por especie. \\
+\hline
+Fuente & ANEXO 2. CRISP-DM Fase 2. \\
+\hline
+Prioridad & Media (condicionada al dataset) \\
+\hline
+Verificaci\'on & Accuracy $\geq$70\% por estado si el dataset tiene suficientes muestras. \\
+\hline
+\end{longtable}
+
+\subsection{Eficiencia Energ\'etica}
+
+\begin{longtable}{|p{3cm}|p{11.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{RNF-020} \criticomark} \\
+\hline
+Categor\'ia & Eficiencia Energ\'etica -- App m\'ovil \\
+\hline
+Obligatoriedad & \textbf{deber\'a} \\
+\hline
+Descripci\'on & 20 identificaciones en jornada de 8h: consumo $\leq$\textbf{15\% de la bater\'ia} del dispositivo de referencia (2 GB RAM, octa-core 1.8 GHz, bater\'ia 3,000 mAh). Estrategias:\newline
+(a) GPS bajo demanda: activado solo en creaci\'on de observaci\'on, apagado tras obtener coordenadas o timeout.\newline
+(b) C\'amara bajo demanda: visor activo solo durante el flujo de captura.\newline
+(c) Inferencia CNN: modelo cargado una vez por sesi\'on; delegados NNAPI/GPU cuando disponible. \\
+\hline
+Fuente & CR-06. \\
+\hline
+Prioridad & Alta \\
+\hline
+Verificaci\'on & 20 identificaciones en dispositivo de referencia; medir con Android Battery Historian. Criterio: $\leq$15\% consumido. \\
+\hline
+\end{longtable}
+
+%=============================================================
+\section{Ap\'endices}
+%=============================================================
+
+\subsection{Ap\'endice A: Modelo de datos v5.2}
+
+\textbf{Nota v5.2:} BD implementada en \textbf{PostgreSQL 15} en el servidor (accedida por Node.js/Express mediante Sequelize u ORM equivalente) y replicada localmente en \textbf{SQLite/Room} en la app m\'ovil. Cambios respecto a v5.1: tabla \texttt{Especie} con atributos visuales confirmados; tabla \texttt{ReporteEspecieDesconocida} y \texttt{RespuestaFlujGuiado} para el flujo asistido; RF-055 (cola del Bot\'anico); RF-052 (mapa web).
+
+\begin{longtable}{|p{3.5cm}|p{11cm}|}
+\hline
+\textbf{Entidad} & \textbf{Atributos principales} \\
+\hline
+\endhead
+\textbf{Usuario} & usuario\_id (PK), nombres, apellidos, email, password\_hash (Bcrypt), rol [guardaparque/validador/botanico/administrador], puesto\_control\_id (FK), telefono, activo, fecha\_registro, ultimo\_acceso, token\_local, fecha\_expiracion\_sesion \\
+\hline
+\textbf{PuestoControl} & puesto\_id (PK), nombre, zona\_shmp, latitud\_aprox, longitud\_aprox \\
+\hline
+\textbf{ZonaInteresSHMP} & zona\_id (PK), nombre [Aguas Calientes/Camino Inca/Zona Arqueol\'ogica/Bosque Montano/...], descripcion, tipo [sector/ruta/punto\_referencia], coordenadas\_geojson \\
+\hline
+\textbf{Especie} & especie\_id (PK), nombre\_cientifico, nombre\_comun\_es, nombre\_comun\_en, nombre\_quechua, biotipo (Ochoa 1), sistema\_ecologico (Ochoa 2), endemismo [local\_e*/nacional\_e] (Ochoa 3), estado\_conservacion\_iucn [CR/EN/VU/LC] (Ochoa 4), reporte\_nuevo [m/?] (Ochoa 5), descripcion\_es (Ochoa 7), detalle\_flor (Ochoa 8), descripcion\_en (Ochoa 11), habitat, epoca\_floracion, endemica\_peru (bool), color\_labelo, morfologia\_labelo [tubular/abierto/espatulado], tipo\_florecimiento [apical/lateral/basal/racemoso/solitario], morfologia\_foliar, disposicion\_hojas, biotipo\_detallado [epifita/terrestre/litofita], presencia\_camino\_inca (bool), presencia\_jardin\_botanico\_mp (bool), presencia\_jardin\_botanico\_llaqta (bool), validada (bool), validador\_id (FK), fecha\_validacion \\
+\hline
+\textbf{ImagenReferencia} & imagen\_id (PK), especie\_id (FK), ruta\_archivo, angulo [frontal\_labelo/lateral/hoja/general], estado\_fenologico, validador\_id (FK), fecha\_captura \\
+\hline
+\textbf{Observacion} & observacion\_id (PK), usuario\_id (FK), especie\_identificada\_id (FK nullable), fecha\_hora, latitud, longitud, precision\_gps\_m, puesto\_control\_id (FK), estado\_individuo [floracion/crecimiento/marchito], notas, confianza\_ia, estado\_sincronizacion, fecha\_sincronizacion, condicion\_climatica, microhabitat, datos\_campo\_completos (bool), intentos\_identificacion (int) \\
+\hline
+\textbf{ImagenObservacion} & imagen\_obs\_id (PK), observacion\_id (FK), ruta\_archivo, thumbnail\_ruta, angulo, es\_imagen\_principal (bool), fecha\_captura, foto\_purgada (bool) \\
+\hline
+\textbf{PreguntaGuiada} & pregunta\_id (PK), texto\_pregunta, opciones\_json, tipo [opciones/texto\_libre], activa (bool), orden \\
+\hline
+\textbf{RespuestaFlujGuiado} & respuesta\_id (PK), observacion\_id (FK), pregunta\_id (FK), respuesta\_opcion, respuesta\_libre\_texto, fecha\_respuesta \\
+\hline
+\textbf{ReporteEspecieDesconocida} & reporte\_id (PK), observacion\_id (FK), usuario\_id (FK), vector\_probabilidades\_json, estado [pendiente/asignada/nueva\_especie/descartada], especie\_asignada\_id (FK nullable), botanico\_revisor\_id (FK nullable), fecha\_revision, comentario\_botanico, alerta\_nueva\_especie (bool), fecha\_reporte \\
+\hline
+\textbf{Validacion} & validacion\_id (PK), observacion\_id (FK), validador\_id (FK), especie\_id\_corregida (FK nullable), estado\_validacion [aprobada/corregida/rechazada], comentario\_tecnico, justificacion\_rechazo, fecha\_validacion \\
+\hline
+\textbf{ModeloCNN} & modelo\_id (PK), version, ruta\_archivo\_tflite, checksum\_sha256, fecha\_publicacion, publicado\_por (FK), activo (bool), precision\_global, notas\_version, num\_especies (int) \\
+\hline
+\textbf{ConfiguracionRemota} & config\_id (PK), clave [umbral\_laplaciano/zoom\_cache\_max/umbral\_confianza\_ia/max\_intentos\_flujo\_asistido], valor, descripcion, fecha\_actualizacion \\
+\hline
+\textbf{Encuesta} & encuesta\_id (PK), usuario\_id (FK), fecha, precision\_percibida (1-5), utilidad\_percibida (1-5), facilidad\_uso (1-5), tiempo\_percibido (1-5), comentario\_libre \\
+\hline
+\end{longtable}
+
+\textbf{Notas de implementaci\'on v5.2:}
+\begin{itemize}
+  \item \textbf{PostgreSQL (servidor):} contiene todas las entidades. Accedido por Node.js/Express mediante ORM (Sequelize recomendado). Las contrase\~nas se almacenan en \texttt{password\_hash} usando Bcrypt (factor $\geq$10) -- nunca texto plano.
+  \item \textbf{SQLite/Room (app m\'ovil):} subconjunto local de \texttt{Usuario}, \texttt{Especie}, \texttt{Observacion}, \texttt{ImagenObservacion}, \texttt{PreguntaGuiada}, \texttt{RespuestaFlujGuiado}, \texttt{ReporteEspecieDesconocida} y \texttt{ConfiguracionRemota}. Cifrado AES-256 con SQLCipher + Android Keystore.
+  \item \textbf{ZonaInteresSHMP:} nueva entidad para las capas de zonas del mapa (RF-035, RF-052). Contiene los 7 puestos de control, sectores del Santuario y rutas de patrullaje como geometr\'ias GeoJSON.
+  \item \textbf{Rol en \texttt{Usuario}:} cuatro valores exactos -- \texttt{guardaparque}, \texttt{validador}, \texttt{botanico}, \texttt{administrador} -- alineados con los 4 actores del sistema.
+\end{itemize}
+
+\subsection{Ap\'endice B: Casos de uso principales}
+
+\begin{longtable}{|p{2.3cm}|p{2.5cm}|p{2.8cm}|p{5.7cm}|}
+\hline
+\textbf{Actor} & \textbf{Plataforma} & \textbf{Acci\'on} & \textbf{Resultado esperado} \\
+\hline
+\endhead
+Guardaparque & App m\'ovil & Identificar orqu\'idea & Resultado en $<$5s; top-3 con endemismo e IUCN destacados; sabe exactamente qu\'e est\'a viendo \\
+\hline
+Guardaparque & App m\'ovil & Baja confianza & Recomendaci\'on de nueva foto con \'angulo espec\'ifico (labelo, hoja) \\
+\hline
+Guardaparque & App m\'ovil & 2+ intentos fallidos & Preguntas guiadas: labelo, florecimiento, hojas, biotipo \\
+\hline
+Guardaparque & App m\'ovil & Reportar desconocida & Reporte con fotos, respuestas, GPS y datos de campo sincronizados \\
+\hline
+Guardaparque & App m\'ovil & Consultar cat\'alogo & Ficha con 11 atributos + labelo, florecimiento, hojas; funciona offline \\
+\hline
+Guardaparque & App m\'ovil & Ver mapa & Mapa con sus observaciones y zonas de inter\'es del SHMP \\
+\hline
+Validador & Web & Validar observaciones & Dashboard web con toda la informaci\'on biol\'ogica; aprobar/corregir/rechazar \\
+\hline
+Validador & Web & Ver mapa web & Mapa con todos los puntos, capas de puestos y zonas del Santuario \\
+\hline
+Bot\'anico & Web & Revisar reporte desconocida & Cola con fotos, respuestas y vector CNN; asignar / descartar / nueva especie \\
+\hline
+Bot\'anico & Web & Editar ficha especie & Completa 11 atributos Ochoa + atributos visuales (labelo, florecimiento, hojas) \\
+\hline
+Administrador & Web & Crear usuario & Formulario web $\rightarrow$ JSON $\rightarrow$ API (HTTP 201) $\rightarrow$ PostgreSQL \\
+\hline
+Administrador & Web & Actualizar modelo & Sube .tflite; distribuci\'on OTA con reanudaci\'on; verifica SHA-256 \\
+\hline
+Administrador & Web & Ver estad\'isticas & Panel global: usuarios, observaciones, reportes, versi\'on del modelo \\
+\hline
+\end{longtable}
+
+\subsection{Ap\'endice C: Matriz de Trazabilidad RF -- Objetivos del Proyecto}
+
+\begin{longtable}{|p{3cm}|p{5.2cm}|p{2.8cm}|p{2.5cm}|}
+\hline
+\textbf{RF/RNF} & \textbf{Objetivo / Restricci\'on} & \textbf{Fase CRISP-DM} & \textbf{Plataforma} \\
+\hline
+\endhead
+RF-001 a RF-005 & RBAC; partici\'on web/app por rol; JWT; Bcrypt & Fase 6 & App+Web \\
+\hline
+RF-006 a RF-011 & OE4: calidad de imagen; preprocesamiento & Fases 3, 6 & App \\
+\hline
+RF-012 a RF-018 & OE3: CNN 16 especies; endemismo e IUCN visibles & Fase 4 & App \\
+\hline
+RF-049, RF-050 & Flujo asistido: labelo, florecimiento, hojas & Fases 4, 6 & App \\
+\hline
+RF-051 & Posible nueva especie; conservaci\'on & Fase 5 & App+Web \\
+\hline
+RF-019 a RF-023 & OE1+OE2: 16 fichas con atributos visuales & Fases 2, 3 & App+Web \\
+\hline
+RF-024 a RF-029 & OE4: registro biol\'ogico completo; purga; sync & Fase 6 & App \\
+\hline
+RF-030 a RF-034 & OE3: validaci\'on web; error 30\%$\to$10\% & Fase 5 & Web \\
+\hline
+RF-035, RF-036, RF-037, RF-038 & OE4: mapas con zonas de inter\'es; GPS degradado & Fase 6 & App+Web \\
+\hline
+RF-052 & OE4: mapa web con puestos y zonas del SHMP & Fase 6 & Web \\
+\hline
+RF-039 a RF-042 & OE5: informes PDF; m\'etricas; encuesta & Fase 5 & Web+App \\
+\hline
+RF-043 a RF-048 & Admin CRUD usuarios; OTA resumable; Ley 29733 & Fase 6 & Web \\
+\hline
+RF-055, RF-056 & Bot\'anico: cola especie desconocida; tendencias & Fases 2--5 & Web \\
+\hline
+RF-057, RF-058 & Compatibilidad API; JSON React$\leftrightarrow$Node.js & Fase 6 & Backend \\
+\hline
+RF-059 & Edge AI offline inmediato (<2s) & Fase 4 & App \\
+\hline
+RF-060 & Cola de sincronización asíncrona & Fase 6 & App+Backend \\
+\hline
+RNF-001, 002 & Hip\'otesis 2: $<$5 min identificaci\'on & Fase 1 & App \\
+\hline
+RNF-003 & Restricci\'on presupuestaria S/.500 & -- & Backend \\
+\hline
+RNF-004 a 008 & OE4: usabilidad campo; paleta corporativa web & Fase 1 & App+Web \\
+\hline
+RNF-009 a 011 & OE4: offline; tolerancia fallos; OTA & Fase 1 & App+Backend \\
+\hline
+RNF-012, 013, 014 & Ley 29733; Bcrypt; JWT; CORS & -- & App+Web+Backend \\
+\hline
+RNF-015, 016 & Android gama media; web multi-navegador & -- & App+Web \\
+\hline
+RNF-017 & Mantenibilidad; 17+ especies sin cambios c\'odigo & Fase 6 & App+Web \\
+\hline
+RNF-018 & OE3: accuracy 85\% + precision 70\%/especie & Fase 4 & Modelo IA \\
+\hline
+RNF-019 & OE1+OE2: cobertura fenol\'ogica & Fases 2--4 & Modelo IA \\
+\hline
+RNF-020 & Bater\'ia $\leq$15\% en 20 identificaciones & Fase 1 & App \\
+\hline
+RNF-021 & Tiempos de carga plataforma web & Fase 6 & Web \\
+\hline
+RNF-022 & Interoperabilidad App$\leftrightarrow$Web$\leftrightarrow$Backend & Fase 6 & Backend \\
+\hline
+RNF-023 & Cuantización Int8, memoria activa ≤150 MB & Fase 4 & App \\
+\hline
+\end{longtable}
+
+\subsection{Ap\'endice D: Cronograma de desarrollo y RF por fase}
+
+\begin{longtable}{|p{3.2cm}|p{3.8cm}|p{6.8cm}|}
+\hline
+\textbf{Etapa} & \textbf{Per\'iodo} & \textbf{RF/RNF relacionados} \\
+\hline
+Etapa 1: Literatura y dise\~no metodol\'ogico & Ago--Sep 2025 & RF-019 (16 fichas, atributos visuales); RF-050 (banco de preguntas guiadas) \\
+\hline
+Etapa 2: Recolecci\'on y procesamiento de datos & Oct 2025 -- Mar 2026 & RF-008/009; RF-023 (Bot\'anico valida 16 fichas); RNF-019 condicionado \\
+\hline
+Etapa 3: Desarrollo e integraci\'on & Mar--May 2026 & RF-001 a RF-058; RNF-001 a RNF-022. App m\'ovil + Plataforma web + API Backend \\
+\hline
+Etapa 4: Validaci\'on y cierre & May--Jul 2026 & RF-030--034 (validaci\'on); RF-052/055 (mapa web, cola Bot\'anico); RNF-018 (accuracy 16 especies); RNF-020 (bater\'ia); RNF-021 (web); RNF-022 (interoperabilidad) \\
+\hline
+\end{longtable}
+
+\subsection{Ap\'endice E: Glosario del dominio}
+
+\begin{longtable}{|p{3.5cm}|p{11cm}|}
+\hline
+\textbf{T\'ermino} & \textbf{Definici\'on} \\
+\hline
+\endhead
+API Backend & Servidor Node.js 20 LTS + Express que act\'ua como n\'ucleo conector entre la app m\'ovil y la plataforma web. Expone endpoints REST JSON. \\
+\hline
+Bcrypt & Algoritmo de hashing de contrase\~nas utilizado en el API Backend (factor $\geq$10) para almacenar contrase\~nas de forma irreversible en PostgreSQL. \\
+\hline
+Biotipo & Forma de crecimiento de la orqu\'idea: ep\'ifita, terrestre, lit\'ofita. Atributo 1 Ochoa. \\
+\hline
+CORS & Cross-Origin Resource Sharing. Pol\'itica implementada en el API Backend para controlar qu\'e or\'igenes (app m\'ovil, plataforma web) pueden hacer peticiones. \\
+\hline
+Degradaci\'on Elegante & El sistema ofrece la mejor alternativa disponible sin bloquear al usuario (ej. GPS $>$10m). \\
+\hline
+Estado fenol\'ogico & Etapa del ciclo vital: floraci\'on, crecimiento vegetativo, marchito. \\
+\hline
+Ground truth & Datos validados por el Bot\'anico para entrenamiento y evaluaci\'on del modelo CNN. \\
+\hline
+JWT & JSON Web Token. Token firmado para autenticaci\'on entre clientes y el API Backend. \\
+\hline
+\textbf{Labelo} & P\'etalo modificado de las orqu\'ideas; elemento clave de identificaci\'on morfol\'ogica y visual. \\
+\hline
+Ochoa (11 atributos) & 11 campos de ficha de especie de la gu\'ia de Julio Gustavo Ochoa Estrada para el SHMP. \\
+\hline
+Paleta corporativa & Colores definidos por el equipo web para la plataforma: \texttt{\#757B47}, \texttt{\#FEFAE0} y tonos complementarios. \\
+\hline
+\textbf{Nueva Especie (posible)} & Planta no clasificable en las 16 especies tras m\'ultiples intentos y flujo asistido. \\
+\hline
+OTA & Over-The-Air. Actualizaci\'on del modelo CNN sin reinstalar la APK. \\
+\hline
+Resumabilidad & Capacidad de una descarga de reanudar desde el punto de interrupci\'on. \\
+\hline
+SERNANP & Servicio Nacional de \'Areas Naturales Protegidas por el Estado del Per\'u. \\
+\hline
+Sistema ecol\'ogico & Condiciones ecol\'ogicas del h\'abitat. Atributo 2 Ochoa. \\
+\hline
+TF Lite & TensorFlow Lite. Framework para inferencia de modelos ML en Android. \\
+\hline
+\textbf{Tipo de Florecimiento} & Caracter\'istica de la inflorescencia: apical, lateral, basal, racemoso, solitario. \\
+\hline
+Validador & Actor 2 del sistema (Especialista en RRNN). Accede solo a la plataforma web para validar observaciones. Distinto del Bot\'anico (Actor 3). \\
+\hline
+Zoom Level & Nivel de detalle del mapa. ZL 15/16 = sector/trocha del SHMP ($\sim$1:10,000--1:25,000). \\
+\hline
+Zona de inter\'es SHMP & Sector geogr\'afico del Santuario (Camino Inca, zona arqueol\'ogica, bosque montano, etc.) representado como capa en el mapa de la app y la web. \\
+\hline
+\end{longtable}
+
+\subsection{Ap\'endice F: Registro de cambios v5.1 $\rightarrow$ v5.2}
+
+\begin{longtable}{|p{1.5cm}|p{2.8cm}|p{2cm}|p{7.5cm}|}
+\hline
+\textbf{ID} & \textbf{Req. Afectado} & \textbf{Sev.} & \textbf{Descripci\'on} \\
+\hline
+\endhead
+v5.2-01 & RF-005 & Alta & Roles renombrados y clarificados: Actor 2 pasa a denominarse ``Validador'' (antes Especialista) para distinguirlo del Bot\'anico (Actor 3). Descripci\'on de permisos actualizada. \\
+\hline
+v5.2-02 & Secci\'on 2.3 & Alta & Tablas de actores completamente reescritas con los 4 roles, plataforma expl\'icita y permisos RBAC precisos. El Administrador queda claramente como el \'unico con CRUD de usuarios. \\
+\hline
+v5.2-03 & RF-043 & Media & RF-043 actualizado: el Administrador gestiona cuentas de los 4 roles (guardaparque, validador, bot\'anico, administrador). Referencia expl\'icita a Bcrypt para contrase\~nas (Ref. 10, RNF-03). \\
+\hline
+v5.2-04 & RF-035 $\rightarrow$ RF-052 (nuevo) & Alta & Mapa de calor eliminado de v5.1. Reemplazado por: (1) RF-035 mejorado: mapa app con zonas de inter\'es del SHMP; (2) RF-052 nuevo: mapa interactivo web con capas de puestos de control, zonas y filtros. Sin an\'alisis de densidad ni detecci\'on de anomal\'ias. \\
+\hline
+v5.2-05 & RF-053, RF-054 (v5.1) & Alta & RF-053 (detecci\'on de eventos an\'omalos) y RF-054 (tendencias temporales) eliminados del SRS. Demasiado alcance para v1.0. RF-056 (tendencias temporales simplificado para Bot\'anico) conservado con prioridad Media. \\
+\hline
+v5.2-06 & RF-057, RF-058 (nuevos) & Alta & Dos nuevos RF de integraci\'on derivados del documento del equipo web (Ref. 10): RF-057 (compatibilidad API con app m\'ovil) y RF-058 (comunicaci\'on React$\leftrightarrow$Node.js en JSON). \\
+\hline
+v5.2-07 & RNF-022 (nuevo) & Alta & Nuevo RNF de interoperabilidad (Ref. 10, RNF-02): el API Backend soporta concurrencia de app m\'ovil y plataforma web sin bloqueos en PostgreSQL. \\
+\hline
+v5.2-08 & RNF-014 & Media & RNF-014 actualizado con requisitos de seguridad del API Backend: CORS, JWT (HTTP 401 sin token), Bcrypt (Ref. 10, RF-03, RNF-03). \\
+\hline
+v5.2-09 & RNF-007 & Media & RNF-007 actualizado con la paleta corporativa web (\texttt{\#757B47}, \texttt{\#FEFAE0}) y requisito de Lighthouse $>$90/100 (Ref. 10, RNF-01). \\
+\hline
+v5.2-10 & Ap\'endice A & Alta & Modelo de datos actualizado: rol \texttt{Usuario} con 4 valores exactos; tabla \texttt{ZonaInteresSHMP} a\~nadida para capas de mapa; nota de implementaci\'on PostgreSQL + Bcrypt para el servidor; Node.js/Express como ORM. \\
+\hline
+v5.2-11 & Stack tecnol\'ogico & Alta & Backend confirmado: Node.js 20 LTS + Express (no FastAPI). PostgreSQL 15 (servidor), SQLite/Room (app). React.js 18 + Tailwind CSS 3 (web). Axios/Fetch API como cliente HTTP. Alineado con Ref. 10. \\
+\hline
+\end{longtable}
+
+\end{document}
