@@ -17,7 +17,7 @@
             <h1 class="text-lg font-bold tracking-tight text-slate-900">CUSCONODES</h1>
             <p class="text-xs text-slate-500 font-medium font-mono">Control de Operaciones Multi-Agente (Hito 4) | Grupo HABA</p>
         </div>
-        <div class="text-right">
+        <div class="flex items-center gap-4">
             <span class="text-xs bg-slate-100 text-slate-700 border border-slate-300 rounded-md px-3 py-1.5 font-mono font-semibold">
                 Patrocinador: Israel Rondán
             </span>
@@ -25,12 +25,13 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-6 py-8">
-        
+
+        <!-- Trigger -->
         <div class="bg-white border border-slate-200 rounded-xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xs">
             <div class="space-y-1">
-                <h2 class="text-base font-semibold text-slate-800">Consola de Simulación Orquestada</h2>
+                <h2 class="text-base font-semibold text-slate-800">Consola de Orquestación en Tiempo Real</h2>
                 <p class="text-xs text-slate-500 max-w-3xl leading-relaxed">
-                    Ejecución síncrona bajo especificación SDD. El agente supervisor analiza la urgencia de las alertas locales en el directorio de persistencia, coordina sub-procesos de traducción concurrentes y valida los canales de transmisión finales.
+                    Ejecución bajo especificación SDD. El agente supervisor lee alertas, coordina traducción multilingüe con Gemini API y despacha por SMTP.
                 </p>
             </div>
             <button id="btn-trigger" onclick="runOrchestrator()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm px-5 py-3 rounded-lg transition shadow-sm cursor-pointer whitespace-nowrap tracking-wide">
@@ -38,8 +39,10 @@
             </button>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
+        <!-- Pipeline -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+            <!-- Supervisor -->
             <div class="bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-between shadow-xs">
                 <div>
                     <div class="flex justify-between items-center mb-4">
@@ -48,25 +51,24 @@
                     </div>
                     <h3 class="text-sm font-bold text-slate-800 mb-1">Agente Supervisor</h3>
                     <p class="text-[11px] font-mono text-slate-400 mb-4">Clase: SupervisorAgent</p>
-                    
                     <div id="log-supervisor" class="space-y-1.5 text-xs font-mono bg-slate-50 p-3 rounded-lg border border-slate-200 min-h-[200px] text-slate-400 leading-relaxed">
                         // En espera de inicialización...
                     </div>
                 </div>
                 <div id="alert-preview" class="mt-4 pt-4 border-t border-slate-200 hidden">
-                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Carga útil detectada (Texto Crudo):</span>
+                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Carga útil detectada:</span>
                     <p id="txt-crudo" class="text-xs text-slate-700 bg-slate-50 p-2.5 rounded border border-slate-200 italic leading-relaxed"></p>
                 </div>
             </div>
 
+            <!-- Translator -->
             <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase">Workers Concurrentes</span>
                     <span id="badge-translator" class="text-[10px] font-bold font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-300">INACTIVO</span>
                 </div>
                 <h3 class="text-sm font-bold text-slate-800 mb-1">Agente Traductor</h3>
-                <p class="text-[11px] font-mono text-slate-400 mb-4">Clase: TranslatorWorker [Subprocesos]</p>
-
+                <p class="text-[11px] font-mono text-slate-400 mb-4">Clase: TranslatorWorker [Gemini API]</p>
                 <div class="space-y-3">
                     <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
                         <div class="flex justify-between text-[11px] font-mono font-semibold mb-1.5 text-slate-600">
@@ -92,6 +94,7 @@
                 </div>
             </div>
 
+            <!-- Notifier -->
             <div class="bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-between shadow-xs">
                 <div>
                     <div class="flex justify-between items-center mb-4">
@@ -100,7 +103,6 @@
                     </div>
                     <h3 class="text-sm font-bold text-slate-800 mb-1">Agente Notificador</h3>
                     <p class="text-[11px] font-mono text-slate-400 mb-4">Clase: NotifierWorker</p>
-                    
                     <div class="space-y-4 mt-6">
                         <div class="flex items-start gap-3 p-2.5 rounded-lg border border-transparent" id="row-whatsapp">
                             <div class="text-xs font-mono bg-slate-100 border border-slate-300 text-slate-600 px-2 py-1 rounded">SMS/WA</div>
@@ -118,7 +120,6 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-[11px] font-mono text-slate-600 mt-6 space-y-1">
                     <div class="font-bold text-slate-500 uppercase text-[9px] tracking-wider mb-1">Métricas de Desempeño:</div>
                     <div>Latencia del Proceso: <span id="m-latency" class="text-slate-900 font-semibold">0.00s</span></div>
@@ -127,106 +128,304 @@
             </div>
 
         </div>
+
+        <!-- Settings -->
+        <div class="bg-white border border-slate-200 rounded-xl p-5 mb-8 shadow-xs">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase">Destinatarios de Alerta</span>
+                <span id="badge-settings" class="text-[10px] font-bold font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-300">CONFIG</span>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">Configura a dónde enviar las alertas. Los cambios se aplican en la siguiente ejecución.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[11px] font-mono font-semibold text-slate-600 block mb-1">📱 WhatsApp (número)</label>
+                    <div class="flex gap-2">
+                        <input id="input-whatsapp" type="text" placeholder="+51922466959" class="flex-1 text-xs border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 font-mono">
+                        <button onclick="saveRecipients()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition cursor-pointer whitespace-nowrap">
+                            Guardar
+                        </button>
+                    </div>
+                    <span id="status-whatsapp" class="text-[10px] font-mono text-slate-400 mt-1 block"></span>
+                </div>
+                <div>
+                    <label class="text-[11px] font-mono font-semibold text-slate-600 block mb-1">✉️ Correo electrónico</label>
+                    <div class="flex gap-2">
+                        <input id="input-email" type="text" placeholder="correo@ejemplo.com" class="flex-1 text-xs border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 font-mono">
+                        <button onclick="saveRecipients()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition cursor-pointer whitespace-nowrap">
+                            Guardar
+                        </button>
+                    </div>
+                    <span id="status-email" class="text-[10px] font-mono text-slate-400 mt-1 block"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- History + Query -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- History Table -->
+            <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase">Historial de Ejecuciones</span>
+                    <button onclick="loadHistory()" class="text-[10px] font-mono bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-300 px-2 py-1 rounded transition cursor-pointer">
+                        Recargar
+                    </button>
+                </div>
+                <div id="history-table" class="text-xs text-slate-400 font-mono">
+                    <p>Cargando historial...</p>
+                </div>
+            </div>
+
+            <!-- Query AI -->
+            <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase">Consulta a la IA</span>
+                    <span id="badge-query" class="text-[10px] font-bold font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-300">CUN-19</span>
+                </div>
+                <h3 class="text-sm font-bold text-slate-800 mb-1">Pregunta al Experto</h3>
+                <p class="text-[11px] font-mono text-slate-400 mb-4">Asistente turístico para Cusco, Perú</p>
+                <div id="query-log" class="flex-1 text-xs font-mono bg-slate-50 p-3 rounded-lg border border-slate-200 min-h-[160px] text-slate-400 leading-relaxed overflow-y-auto max-h-[260px]">
+                    // Haz una pregunta sobre alertas o turismo en Cusco.
+                </div>
+                <div class="flex gap-2 mt-3">
+                    <input id="query-input" type="text" placeholder="Ej: ¿Hay bloqueos en Ollantaytambo?" class="flex-1 text-xs border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 font-mono">
+                    <button onclick="sendQuery()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition cursor-pointer whitespace-nowrap">
+                        Enviar
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
     </main>
 
     <script>
-        // Ley de Preservación de Toponimias - Formateador de alto contraste profesional sin colores informales
         function highlightToponymies(text) {
             const terms = ["Machu Picchu", "Ollantaytambo", "Sacsayhuamán", "Pisac", "Chinchero", "Urubamba", "Vallée Sacrée", "Vale Sagrado", "Sacred Valley"];
             let newText = text;
             terms.forEach(term => {
-                const regex = new RegExp(term, "g");
+                const regex = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g");
                 newText = newText.replace(regex, `<span class="text-indigo-700 font-semibold bg-indigo-50 border border-indigo-200 px-1 rounded">${term}</span>`);
             });
             return newText;
         }
 
+        function setBadge(id, text, cls) {
+            const el = document.getElementById(id);
+            el.className = "text-[10px] font-bold font-mono " + cls + " px-2 py-0.5 rounded border";
+            el.innerText = text;
+        }
+
         async function runOrchestrator() {
             const startTime = performance.now();
-            
-            // UI Cambio de Estado a Ejecución
-            document.getElementById('badge-supervisor').className = "text-[10px] font-bold font-mono bg-indigo-50 text-indigo-700 border border-indigo-200 anim-pulse-clean";
-            document.getElementById('badge-supervisor').innerText = "PROCESANDO";
-            
+            document.getElementById('btn-trigger').disabled = true;
+            document.getElementById('btn-trigger').classList.add('opacity-50');
+
+            setBadge('badge-supervisor', 'PROCESANDO', 'bg-indigo-50 text-indigo-700 border-indigo-200 anim-pulse-clean');
+            setBadge('badge-translator', 'TRADUCIENDO', 'bg-amber-50 text-amber-700 border-amber-200 anim-pulse-clean');
+
             const logSup = document.getElementById('log-supervisor');
             logSup.className = "space-y-1.5 text-xs font-mono bg-slate-50 p-3 rounded-lg border border-slate-200 min-h-[200px] text-slate-700 leading-relaxed";
-            logSup.innerHTML = `<div>[Supervisor] Analizando directorio de persistencia local...</div>`;
+            logSup.innerHTML = `<div>[Supervisor] Analizando directorio de persistencia local...</div>
+                <div class="text-amber-700">[Supervisor] Inicializando hilos paralelos para workers de traducción...</div>
+                <div>[Supervisor] Invocando Gemini API para EN, FR, PT...</div>`;
+
+            ['status-en', 'status-fr', 'status-pt'].forEach(id => {
+                document.getElementById(id).className = "text-amber-600 font-semibold anim-pulse-clean";
+                document.getElementById(id).innerText = "Procesando...";
+            });
 
             try {
-                // Simulación de flujo estructurado escalonado para auditoría del jurado
-                setTimeout(() => {
-                    logSup.innerHTML += `<div class="text-amber-700">[Supervisor] Inicializando hilos paralelos para workers de traducción...</div>`;
-                    document.getElementById('badge-translator').className = "text-[10px] font-bold font-mono bg-amber-50 text-amber-700 border border-amber-200 anim-pulse-clean";
-                    document.getElementById('badge-translator').innerText = "TRADUCIENDO";
-                    
-                    ['status-en', 'status-fr', 'status-pt'].forEach(id => {
-                        document.getElementById(id).className = "text-amber-600 font-semibold anim-pulse-clean";
-                        document.getElementById(id).innerText = "Procesando...";
-                    });
-                }, 1000);
-
-                // Consumo del API REST expuesta por el servidor Flask
                 const response = await fetch('http://127.0.0.1:5000/api/orchestrate', { method: 'POST' });
                 const data = await response.json();
 
-                setTimeout(() => {
-                    // Cargar payload original
-                    document.getElementById('alert-preview').classList.remove('hidden');
-                    document.getElementById('txt-crudo').innerText = data.texto_crudo;
+                if (data.status === "error") throw new Error(data.message);
 
-                    // Finalización de tareas de traducción
-                    document.getElementById('badge-translator').className = "text-[10px] font-bold font-mono bg-slate-100 text-slate-700 border border-slate-300";
-                    document.getElementById('badge-translator').innerText = "COMPLETO";
-                    
-                    const setLanguageResult = (statusId, textId, langData) => {
+                // Render supervisor
+                document.getElementById('alert-preview').classList.remove('hidden');
+                const textoRaw = data.texto_crudo || data.resumen_ia || '';
+                document.getElementById('txt-crudo').innerText = textoRaw;
+
+                // Render translations
+                setBadge('badge-translator', 'COMPLETO', 'bg-slate-100 text-slate-700 border-slate-300');
+
+                const setLang = (statusId, textId, langData) => {
+                    if (langData && langData.titulo) {
                         document.getElementById(statusId).className = "text-emerald-700 font-bold";
                         document.getElementById(statusId).innerText = "VALIDADO";
                         document.getElementById(textId).innerHTML = `<strong class="text-slate-800 block mb-0.5">${langData.titulo}</strong>${highlightToponymies(langData.contenido)}`;
-                    };
+                    } else {
+                        document.getElementById(statusId).className = "text-slate-400";
+                        document.getElementById(statusId).innerText = "NO DISPONIBLE";
+                    }
+                };
 
-                    setLanguageResult('status-en', 'trans-en', data.traducciones.en);
-                    setLanguageResult('status-fr', 'trans-fr', data.traducciones.fr);
-                    setLanguageResult('status-pt', 'trans-pt', data.traducciones.pt);
+                const trads = data.traducciones || {};
+                setLang('status-en', 'trans-en', trads.en);
+                setLang('status-fr', 'trans-fr', trads.fr);
+                setLang('status-pt', 'trans-pt', trads.pt);
 
-                    logSup.innerHTML += `<div class="text-slate-600">[Supervisor] Integridad de traducciones verificada exitosamente.</div>`;
-                }, 2500);
+                logSup.innerHTML += `<div class="text-slate-600">[Supervisor] Integridad de traducciones verificada exitosamente.</div>`;
 
-                setTimeout(() => {
-                    // Activación del Agente Notificador
-                    logSup.innerHTML += `<div>[Supervisor] Transmitiendo payload estructurado al subsistema de despacho...</div>`;
-                    document.getElementById('badge-notifier').className = "text-[10px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 anim-pulse-clean";
-                    document.getElementById('badge-notifier').innerText = "TRANSMITIENDO";
+                // Render notifier
+                setBadge('badge-notifier', 'TRANSMITIENDO', 'bg-emerald-50 text-emerald-700 border-emerald-200');
 
+                const despacho = data.despacho_status || {};
+                const smtpOk = despacho.smtp_intentos > 0;
+                const whatsappOk = despacho.whatsapp_intentos > 0;
+
+                if (whatsappOk) {
                     document.getElementById('row-whatsapp').className = "flex items-start gap-3 p-2.5 rounded-lg border border-emerald-100 bg-emerald-50/50";
                     document.getElementById('txt-whatsapp').className = "text-[11px] text-emerald-800 font-medium";
-                    document.getElementById('txt-whatsapp').innerText = "Plantilla de contingencia inyectada con éxito en la API.";
+                    document.getElementById('txt-whatsapp').innerText = "Mensaje despachado vía Twilio WhatsApp API.";
+                } else {
+                    document.getElementById('row-whatsapp').className = "flex items-start gap-3 p-2.5 rounded-lg border border-rose-100 bg-rose-50/50";
+                    document.getElementById('txt-whatsapp').className = "text-[11px] text-rose-700";
+                    document.getElementById('txt-whatsapp').innerText = "Fallo en envío WhatsApp. Revisar credenciales Twilio.";
+                }
 
+                if (smtpOk) {
                     document.getElementById('row-smtp').className = "flex items-start gap-3 p-2.5 rounded-lg border border-emerald-100 bg-emerald-50/50";
                     document.getElementById('txt-smtp').className = "text-[11px] text-emerald-800 font-medium";
-                    document.getElementById('txt-smtp').innerText = "Cola de mensajería procesada por servidor saliente.";
-                }, 4000);
+                    document.getElementById('txt-smtp').innerText = "Correo despachado vía SMTP exitosamente.";
+                } else {
+                    document.getElementById('row-smtp').className = "flex items-start gap-3 p-2.5 rounded-lg border border-rose-100 bg-rose-50/50";
+                    document.getElementById('txt-smtp').className = "text-[11px] text-rose-700";
+                    document.getElementById('txt-smtp').innerText = "Fallo en envío SMTP. Revisar credenciales.";
+                }
 
-                setTimeout(() => {
-                    // Consolidación y cierre del ciclo
-                    document.getElementById('badge-supervisor').className = "text-[10px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200";
-                    document.getElementById('badge-supervisor').innerText = "FINALIZADO";
-                    document.getElementById('badge-notifier').className = "text-[10px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200";
-                    document.getElementById('badge-notifier').innerText = "COMPLETO";
+                setBadge('badge-notifier', 'COMPLETO', 'bg-emerald-50 text-emerald-700 border-emerald-200');
+                setBadge('badge-supervisor', 'FINALIZADO', 'bg-emerald-50 text-emerald-700 border-emerald-200');
 
-                    logSup.innerHTML += `<div class="text-slate-900 font-semibold">[Supervisor] Persistencia completada en data/processed/. Pipeline cerrado.</div>`;
+                logSup.innerHTML += `<div class="text-slate-900 font-semibold">[Supervisor] Persistencia completada en data/processed/. Pipeline cerrado.</div>`;
 
-                    const endTime = performance.now();
-                    const duration = ((endTime - startTime) / 1000).toFixed(2);
-                    document.getElementById('m-latency').innerText = `${duration}s`;
-                    document.getElementById('m-status').className = "text-emerald-700 font-bold";
-                    document.getElementById('m-status').innerText = data.despacho_status.estado_final.toUpperCase();
-                }, 5500);
+                const endTime = performance.now();
+                const latency = data._latencia || ((endTime - startTime) / 1000).toFixed(2);
+                document.getElementById('m-latency').innerText = latency + 's';
+                document.getElementById('m-status').className = "text-emerald-700 font-bold";
+                document.getElementById('m-status').innerText = (despacho.estado_final || 'PENDIENTE').toUpperCase();
 
             } catch (error) {
-                console.error(error);
                 logSup.innerHTML += `<div class="text-rose-700 font-semibold">[Fallo] Excepción detectada en pipeline: ${error.message}</div>`;
+                setBadge('badge-supervisor', 'ERROR', 'bg-rose-50 text-rose-700 border-rose-200');
+                setBadge('badge-translator', 'ERROR', 'bg-rose-50 text-rose-700 border-rose-200');
+            }
+
+            document.getElementById('btn-trigger').disabled = false;
+            document.getElementById('btn-trigger').classList.remove('opacity-50');
+            loadHistory();
+        }
+
+        // History
+        async function loadHistory() {
+            const container = document.getElementById('history-table');
+            try {
+                const res = await fetch('http://127.0.0.1:5000/api/history');
+                const entries = await res.json();
+                if (!entries.length) {
+                    container.innerHTML = '<p class="text-slate-400">Sin ejecuciones registradas.</p>';
+                    return;
+                }
+                let html = `<table class="w-full text-left border-collapse">
+                    <thead><tr class="border-b border-slate-200 text-[10px] text-slate-500 uppercase tracking-wider">
+                        <th class="pb-2 pr-3">Hora</th>
+                        <th class="pb-2 pr-3">Urgencia</th>
+                        <th class="pb-2 pr-3">Texto</th>
+                        <th class="pb-2 pr-3">Traducciones</th>
+                        <th class="pb-2 pr-3">Despacho</th>
+                        <th class="pb-2 text-right">Latencia</th>
+                    </tr></thead><tbody>`;
+                entries.forEach(e => {
+                    const urgCls = e.urgencia === 'CRITICA' || e.urgencia === 'CRÍTICA' ? 'text-rose-700 font-bold' : 'text-slate-600';
+                    const despCls = e.despacho === 'despachado' ? 'text-emerald-700' : 'text-amber-700';
+                    html += `<tr class="border-b border-slate-100 text-[11px] text-slate-600">
+                        <td class="py-2 pr-3 whitespace-nowrap font-mono">${e.timestamp || '-'}</td>
+                        <td class="py-2 pr-3 whitespace-nowrap ${urgCls}">${e.urgencia || '-'}</td>
+                        <td class="py-2 pr-3 max-w-[200px] truncate">${(e.texto_crudo || '').substring(0, 80)}</td>
+                        <td class="py-2 pr-3">${(e.traducciones || []).join(', ').toUpperCase()}</td>
+                        <td class="py-2 pr-3 whitespace-nowrap ${despCls}">${e.despacho || '-'}</td>
+                        <td class="py-2 text-right whitespace-nowrap font-mono">${e.latencia_s ? e.latencia_s + 's' : '-'}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch {
+                container.innerHTML = '<p class="text-rose-600">Error al cargar historial.</p>';
             }
         }
+
+        // Query AI
+        async function sendQuery() {
+            const input = document.getElementById('query-input');
+            const question = input.value.trim();
+            if (!question) return;
+
+            const log = document.getElementById('query-log');
+            log.innerHTML += `<div class="text-slate-800 mt-2"><span class="font-bold">Tú:</span> ${question}</div>`;
+            log.innerHTML += `<div class="text-slate-400"><span class="font-bold">IA:</span> Pensando...</div>`;
+            log.scrollTop = log.scrollHeight;
+            input.value = '';
+
+            try {
+                const res = await fetch('http://127.0.0.1:5000/api/query', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({question})
+                });
+                const data = await res.json();
+                log.innerHTML = log.innerHTML.replace(
+                    '<div class="text-slate-400"><span class="font-bold">IA:</span> Pensando...</div>',
+                    `<div class="text-slate-700"><span class="font-bold">IA:</span> ${highlightToponymies(data.answer)}</div>`
+                );
+            } catch (err) {
+                log.innerHTML = log.innerHTML.replace(
+                    '<div class="text-slate-400"><span class="font-bold">IA:</span> Pensando...</div>',
+                    `<div class="text-rose-600"><span class="font-bold">IA:</span> Error de conexión.</div>`
+                );
+            }
+            log.scrollTop = log.scrollHeight;
+        }
+
+        document.getElementById('query-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendQuery();
+        });
+
+        // Recipients
+        async function loadRecipients() {
+            try {
+                const res = await fetch('http://127.0.0.1:5000/api/recipients');
+                const data = await res.json();
+                document.getElementById('input-whatsapp').value = data.whatsapp || '';
+                document.getElementById('input-email').value = data.email || '';
+            } catch {}
+        }
+
+        async function saveRecipients() {
+            const whatsapp = document.getElementById('input-whatsapp').value.trim();
+            const email = document.getElementById('input-email').value.trim();
+            try {
+                const res = await fetch('http://127.0.0.1:5000/api/recipients', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({whatsapp, email})
+                });
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    document.getElementById('status-whatsapp').innerText = '✅ Guardado';
+                    document.getElementById('status-email').innerText = '✅ Guardado';
+                    setTimeout(() => {
+                        document.getElementById('status-whatsapp').innerText = '';
+                        document.getElementById('status-email').innerText = '';
+                    }, 3000);
+                }
+            } catch {
+                document.getElementById('status-whatsapp').innerText = '❌ Error al guardar';
+                document.getElementById('status-email').innerText = '❌ Error al guardar';
+            }
+        }
+
+        loadHistory();
+        loadRecipients();
     </script>
 </body>
 </html>

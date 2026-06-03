@@ -29,6 +29,12 @@ class Settings:
     SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
     SMTP_PORT = int(os.getenv('SMTP_PORT', 587))
     SENDER_EMAIL = os.getenv('SENDER_EMAIL', '')
+    SENDER_PASSWORD = os.getenv('SENDER_PASSWORD', '')
+
+    # Twilio WhatsApp Configuration
+    TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', '')
+    TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', '')
+    TWILIO_WHATSAPP_TO = os.getenv('TWILIO_WHATSAPP_TO', '')
 
     # Configuración de Almacenamiento
     DATA_STORAGE_PATH = os.getenv('DATA_STORAGE_PATH', './data')
