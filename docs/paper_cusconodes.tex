@@ -1,0 +1,638 @@
+% =========================================================
+%  Paper: CuscoNodes - Sistema de IA Agencia para Alertas
+%         Turisticas en Tiempo Real
+%  Plantilla RATE — Revista Argentina de Trabajos Estudiantiles
+%  Formato dos columnas, A4, estilo IEEE
+%  Compatible con pdfLaTeX (TeXpage)
+% =========================================================
+\documentclass[10pt,twocolumn,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,provide=*]{babel}
+\usepackage{times}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{caption}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{lettrine}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{footnote}
+\usepackage{dblfloatfix}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+
+\geometry{
+  a4paper,
+  top=19mm,
+  bottom=30mm,
+  left=13mm,
+  right=13mm,
+  columnsep=4mm
+}
+
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\fontsize{7}{8}\selectfont,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape,
+  stringstyle=\ttfamily,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=4pt,
+  showstringspaces=false,
+  tabsize=2,
+  captionpos=b
+}
+
+\setlength{\parindent}{3.5mm}
+\setlength{\parskip}{0pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+\titleformat{\section}
+  {\normalsize\bfseries\centering\scshape}
+  {\Roman{section}.}{0.5em}{}
+\titlespacing{\section}{0pt}{6pt}{4pt}
+
+\titleformat{\subsection}
+  {\normalsize\itshape}
+  {\Alph{subsection}.}{0.5em}{}
+\titlespacing{\subsection}{0pt}{4pt}{2pt}
+
+\captionsetup[figure]{
+  labelsep=period,
+  font={small},
+  justification=centering,
+  position=below
+}
+\captionsetup[table]{
+  labelsep=newline,
+  font={small,sc},
+  justification=centering,
+  position=above,
+  name=TABLA
+}
+
+\makeatletter
+\renewcommand{\maketitle}{%
+  \twocolumn[{%
+    \begin{center}
+      {\fontsize{24}{28}\selectfont\@title\par}
+      \vspace{4mm}
+      {\normalsize\@author\par}
+    \end{center}
+    \vspace{4mm}
+  }]%
+  \footnotetext{$^*$ Trabajo presentado como actividad academica en la
+    asignatura de Inteligencia Artificial, Universidad Andina del
+    Cusco.}%
+}
+\makeatother
+
+\title{CuscoNodes: Sistema de Inteligencia Artificial Agencia\\
+       para Alertas Turisticas Multilingue en Tiempo Real}
+
+\author{%
+  Honorio Morales Ttito$^*$  Sebastian Zavaleta Luna$^*$  Sayo Michael Torres Caceres$^*$ \hfill Escuela Profesional de Ingenieria de Sistemas \\
+  \textit{Universidad Andina del Cusco, Cusco, Peru} \\
+  \textit{Patrocinador: Israel Rondan (PDS Viajes)}
+}
+
+\date{}
+
+% =========================================================
+\begin{document}
+% =========================================================
+
+\maketitle
+\thispagestyle{fancy}
+
+\noindent\textbf{\textit{Resumen}}---CuscoNodes es un sistema de
+inteligencia artificial agente que procesa, traduce y notifica
+alertas turisticas en la region de Cusco, Peru. El sistema implementa
+un pipeline de tres etapas siguiendo el patron arquitectonico
+Supervisor-Worker: (1) Percepcion (scraping de fuentes locales),
+(2) Razonamiento (analisis y traduccion multilingue con Gemini API), y
+(3) Accion (notificacion multicanal via SMTP y Twilio WhatsApp).
+Se desarrollaron seis sprints incrementales que cubren desde la
+extraccion de datos hasta el despliegue en produccion con panel de
+administracion, autenticacion, metricas en tiempo real y
+programacion automatica. El pipeline alcanza una latencia promedio de
+5.5 segundos con traducciones concurrentes en ingles, frances y
+portugues, preservando toponimias sagradas (Machu Picchu,
+Ollantaytambo, Sacsayhuaman, Pisac, Chinchero, Urubamba). El sistema
+se despliega en Render con Python 3.12.6 y Gunicorn, y el codigo
+fuente esta disponible en un repositorio publico de GitHub.
+
+\smallskip
+\noindent\textbf{\textit{Abstract}}---CuscoNodes is an agentic
+artificial intelligence system that processes, translates, and
+notifies tourist alerts in the Cusco region of Peru. The system
+implements a three-stage pipeline following the Supervisor-Worker
+architectural pattern: (1) Perception (scraping local sources),
+(2) Reasoning (multilingual analysis and translation with Gemini API),
+and (3) Action (multichannel notification via SMTP and Twilio
+WhatsApp). Six incremental sprints were developed, covering from data
+extraction to production deployment with an administration dashboard,
+authentication, real-time metrics, and automatic scheduling. The
+pipeline achieves an average latency of 5.5 seconds with concurrent
+translations in English, French, and Portuguese, preserving sacred
+toponyms. The system is deployed on Render with Python 3.12.6 and
+Gunicorn, and the source code is available in a public GitHub
+repository.
+
+% ----------------------------------------------------------
+\section{Introduccion}
+% ----------------------------------------------------------
+
+\lettrine[lines=2]{E}{}l turismo en la region de Cusco, Peru,
+enfrenta desafios de informacion en tiempo real debido a la
+frecuencia de eventos locales como huelgas, cierres de vias y
+condiciones climaticas adversas~[1]. Los turistas extranjeros,
+principales visitantes de Machu Picchu y el Valle Sagrado,
+requieren alertas en su idioma nativo para tomar decisiones
+informadas durante su estadia.
+
+CuscoNodes nace como respuesta a esta necesidad, proponiendo un
+sistema de inteligencia artificial agente que automatiza el ciclo
+completo de deteccion, analisis y comunicacion de alertas. El
+proyecto fue desarrollado por el grupo HABA bajo el patrocinio de
+PDS Viajes, con el objetivo de integrar tecnologias de IA, APIs
+comerciales y canales de mensajeria en un pipeline cohesivo.
+
+El repositorio del proyecto se encuentra en:
+\begin{center}
+\small\url{https://github.com/Honorio-Morales/cusconodes}
+\end{center}
+
+La aplicacion desplegada esta disponible en:
+\begin{center}
+\small\url{https://cusconodes.onrender.com}
+\end{center}
+
+% ----------------------------------------------------------
+\section{Fundamento Teorico}
+% ----------------------------------------------------------
+
+\subsection{Sistemas Multi-Agente}
+
+Los sistemas multi-agente (MAS) constituyen un paradigma de la
+inteligencia artificial distribuida donde multiples agentes
+autonomos interactuan para resolver problemas complejos~[2]. Cada
+agente posee capacidad de percepcion, razonamiento y accion,
+operando de manera independiente pero coordinada.
+
+El patron Supervisor-Worker, utilizado en este proyecto, establece
+una jerarquia donde un agente supervisor coordina y delega tareas a
+agentes trabajadores especializados, sincronizando sus resultados
+antes de continuar~[3]. Este patron es particularmente efectivo
+para pipelines de procesamiento donde diferentes etapas requieren
+experticia especifica.
+
+\subsection{Agentes de Lenguaje Grande (LLMs)}
+
+Los modelos de lenguaje de gran escala (LLMs) como Gemini~[4] y
+GPT~[5] han demostrado capacidad para tareas de traduccion
+contextual, clasificacion y generacion de texto. En este proyecto,
+Gemini API se utiliza para la traduccion multilingue de alertas,
+preservando terminos geograficos sagrados mediante tecnicas de
+prompt engineering con system prompts especificos.
+
+\subsection{Arquitectura Supervisor-Worker}
+
+La arquitectura implementada consta de tres roles:
+\begin{itemize}
+  \item \textbf{SupervisorAgent:} orquestador central que lee
+  alertas del directorio de persistencia, evalua la urgencia y
+  delega tareas a los workers.
+  \item \textbf{TranslatorWorker:} agente especializado en
+  traduccion que invoca Gemini API para generar contenido en un
+  idioma destino (en, fr, pt).
+  \item \textbf{NotifierWorker:} agente de difusion que despacha
+  notificaciones via SMTP (Gmail) y Twilio WhatsApp.
+\end{itemize}
+
+% ----------------------------------------------------------
+\section{Metodologia}
+% ----------------------------------------------------------
+
+\subsection{Arquitectura del Sistema}
+
+La solucion se organiza en tres capas principales:
+\begin{itemize}
+  \item \textbf{Backend (Flask):} servidor REST que expone
+  endpoints para orquestacion, consultas, historial, metricas y
+  configuracion.
+  \item \textbf{Agentes (Python):} modulo de logica agente
+  implementando el pipeline Supervisor-Worker con concurrencia
+  via \texttt{threading}.
+  \item \textbf{Frontend (Tailwind CSS):} dashboard corporativo
+  modo claro con visualizacion en tiempo real del pipeline,
+  historial, metricas y controles de administracion.
+\end{itemize}
+
+La Figura~1 muestra la arquitectura de despliegue del sistema.
+
+\begin{figure}[t]
+\centering
+\framebox[\columnwidth]{\parbox{0.9\columnwidth}{
+\small\ttfamily
+Cliente Web $\rightarrow$ \\
+\hspace*{2mm}Flask/Gunicorn $\rightarrow$ \\
+\hspace*{4mm}SupervisorAgent $\rightarrow$ \\
+\hspace*{6mm}TranslatorWorker [Gemini API] \\
+\hspace*{6mm}NotifierWorker \\
+\hspace*{8mm}SMTP (Gmail) \\
+\hspace*{8mm}Twilio WhatsApp \\
+\hspace*{4mm}data/processed/ (JSON) $\leftarrow$ Persistencia
+}}
+\caption{Arquitectura de despliegue del sistema CuscoNodes.}
+\label{fig:arquitectura}
+\end{figure}
+
+\subsection{Tecnologias Utilizadas}
+
+La Tabla~I resume las tecnologias principales del proyecto.
+
+\begin{table}[t]
+\caption{Tecnologias del Sistema}
+\label{tab:tecnologias}
+\centering
+\small
+\begin{tabular}{p{2.5cm}|p{4cm}}
+\hline
+\textbf{Componente} & \textbf{Tecnologia} \\
+\hline
+Backend & Flask, Gunicorn, Python 3.12.6 \\
+\hline
+Frontend & Tailwind CSS v4, Chart.js v4 \\
+\hline
+IA & Google Gemini API (gemini-2.0-flash) \\
+\hline
+Mensajeria & Twilio WhatsApp Business API \\
+\hline
+Correo & SMTP Gmail con App Password \\
+\hline
+Scheduler & APScheduler 3.x \\
+\hline
+Despliegue & Render (free tier) \\
+\hline
+Control versiones & Git + GitHub \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Pipeline de Agentes}
+
+El pipeline ejecuta cuatro etapas secuenciales:
+
+\textbf{Etapa 1 -- SupervisorAgent:} Lee el archivo JSON mas
+reciente del directorio \texttt{data/processed/}. Si la alerta es
+\texttt{IRRELEVANTE}, aborta el pipeline.
+
+\textbf{Etapa 2 -- TranslatorWorker $\times$ 3 (concurrentes):}
+Tres workers se ejecutan en hilos paralelos, cada uno invocando
+Gemini API para traducir a un idioma. Incluyen retry con backoff
+exponencial (1s, 2s, 4s) ante errores de cuota (HTTP 429). Si
+fallan todos los reintentos, usan traducciones de respaldo.
+
+\textbf{Etapa 3 -- NotifierWorker:} Despacha el payload
+multilingue via SMTP (plantilla HTML con banderas y toponimias
+destacadas) y Twilio WhatsApp (mensaje Markdown).
+
+\textbf{Etapa 4 -- Persistencia:} Guarda el resultado completo en
+\texttt{data/processed/alertas\_clasificadas\_demo\_final.json}.
+
+\subsection{Concurrencia y Sincronizacion}
+
+La implementacion usa \texttt{threading.Thread} para lanzar los
+tres workers de traduccion simultaneamente. Se aplica un stagger
+de 0.5 segundos entre workers para evitar rate limiting en Gemini
+API. La sincronizacion se realiza mediante \texttt{thread.join()},
+garantizando que la consolidacion ocurra solo despues de que todos
+los workers completen su ejecucion.
+
+\subsection{Proteccion de Toponimias}
+
+El sistema mantiene un conjunto inmutable de terminos protegidos:
+Machu Picchu, Ollantaytambo, Sacsayhuaman, Pisac, Chinchero y
+Urubamba. Estos se preservan mediante system prompts en las
+solicitudes a Gemini API y se resaltan visualmente en el dashboard
+y las plantillas HTML de correo.
+
+\subsection{Endpoints REST}
+
+La Tabla~II enumera los endpoints implementados.
+
+\begin{table}[t]
+\caption{Endpoints REST del Sistema}
+\label{tab:endpoints}
+\centering
+\small
+\begin{tabular}{p{0.8cm}|p{2.6cm}|p{2.2cm}|p{0.7cm}}
+\hline
+\textbf{Met.} & \textbf{Endpoint} & \textbf{Funcion} & \textbf{Auth} \\
+\hline
+GET & /api/health & Health check & No \\
+POST & /api/login & Autenticacion & No \\
+GET & /api/history & Historial (50) & Si \\
+GET & /api/metrics & Metricas agregadas & Si \\
+GET & /api/export/csv & Exportar CSV & Si \\
+POST & /api/orchestrate & Pipeline agentes & Si \\
+POST & /api/query & Consulta IA & No \\
+GET/POST & /api/recipients & Destinatarios & Si \\
+POST & /api/scheduler/* & Control scheduler & Si \\
+GET & /api/monitoring & Monitoreo & Si \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Plan de Monitoreo}
+
+El sistema incluye un subsistema de monitoreo con:
+\begin{itemize}
+  \item \textbf{Health check:} endpoint \texttt{GET /api/health}
+  que verifica la disponibilidad del servicio.
+  \item \textbf{Logging persistente:} registro de cada ejecucion
+  del pipeline en \texttt{data/pipeline.log}.
+  \item \textbf{Tracking de ejecuciones:} archivo
+  \texttt{data/monitoring.json} con conteo de exitos, fallos,
+  timestamps de ultima ejecucion y ultimo error.
+  \item \textbf{Dashboard de monitoreo:} panel visual en el
+  frontend mostrando estado del scheduler, health status,
+  pipeline exitosos/fallidos y ultimo error registrado.
+\end{itemize}
+
+% ----------------------------------------------------------
+\section{Resultados}
+% ----------------------------------------------------------
+
+\subsection{Sprints Completados}
+
+El proyecto se desarrollo en seis sprints incrementales. La
+Tabla~III resume el avance por sprint.
+
+\begin{table}[t]
+\caption{Avance por Sprint}
+\label{tab:sprints}
+\centering
+\small
+\begin{tabular}{p{1.2cm}|p{4.5cm}|c}
+\hline
+\textbf{Sprint} & \textbf{Enfoque} & \textbf{Estado} \\
+\hline
+Sprint 1 & Iniciacion y planificacion & 100\% \\
+Sprint 2 & Percepcion (scraping RPP, PeruRail) & 100\% \\
+Sprint 3 & Razonamiento (agentes mock + dashboard) & 100\% \\
+Sprint 4 & Accion (Gemini, SMTP, Twilio reales) & 100\% \\
+Sprint 5 & Administracion (auth, metricas, scheduler) & 100\% \\
+Sprint 6 & Cierre y documentacion final & 100\% \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Metricas de Rendimiento}
+
+La Tabla~IV presenta las metricas obtenidas del pipeline en
+ejecuciones reales.
+
+\begin{table}[t]
+\caption{Metricas de Rendimiento del Pipeline}
+\label{tab:metricas}
+\centering
+\small
+\begin{tabular}{p{3.5cm}|c}
+\hline
+\textbf{Metrica} & \textbf{Valor} \\
+\hline
+Latencia de traduccion paralela (3 idiomas) & 1.5 s \\
+Latencia total del pipeline & 5.50 s \\
+Toponimias preservadas & 6/6 \\
+Hilos de traduccion concurrentes & 3 \\
+Canales de notificacion & 2 (WA + SMTP) \\
+Codigo HTTP endpoint POST & 200 OK \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Resultados por Historia de Usuario}
+
+La Tabla~V detalla el cumplimiento de las 21 historias de usuario
+distribuidas en los sprints 2 a 5. Cada historia fue verificada
+mediante criterios de aceptacion documentados en los reportes
+tecnicos de cada sprint.
+
+\begin{table*}[t]
+\caption{Historias de Usuario Completadas}
+\label{tab:historias}
+\centering
+\small
+\begin{tabular}{p{1cm}p{3.8cm}p{5.5cm}c}
+\toprule
+\textbf{CUN} & \textbf{Historia} & \textbf{Implementacion} & \textbf{Estado} \\
+\midrule
+01 & Scraping RPP & \texttt{RPPScraper} con parsing de HTML & 100\% \\
+02 & Scraping PeruRail & \texttt{PeruRailScraper} con extraccion de tablas & 100\% \\
+03 & Base de datos JSON & Persistencia en \texttt{data/raw/} y \texttt{data/processed/} & 100\% \\
+04 & Configuracion entorno & \texttt{Settings} con python-dotenv & 100\% \\
+05 & Clasificador urgencia & Clasificacion CRITICA/ALTA/NORMAL/IRRELEVANTE & 100\% \\
+06 & Filtro relevancia & Filtro turistico con Criticality Guard & 100\% \\
+07 & Orquestacion central & \texttt{SupervisorAgent} con pipeline secuencial & 100\% \\
+08 & Traduccion concurrente & 3 \texttt{TranslatorWorker} en hilos paralelos & 100\% \\
+09 & Notificacion multicanal & \texttt{NotifierWorker} con SMTP + WhatsApp & 100\% \\
+10 & Dashboard supervisor & Interfaz web con Tailwind CSS modo claro & 100\% \\
+11 & Endpoint REST orquestacion & \texttt{POST /api/orchestrate} & 100\% \\
+12 & Historial persistente & \texttt{GET /api/history} con JSON persistente & 100\% \\
+13 & Panel metricas & Latencia y estado en dashboard & 100\% \\
+14 & Toponimias preservadas & System prompt + \texttt{protected\_terms} & 100\% \\
+15 & Traduccion Gemini real & \texttt{google.genai} con retry backoff & 100\% \\
+16 & Agentes cooperativos & Supervisor + Workers con \texttt{threading} & 100\% \\
+17 & SMTP real & Gmail SMTP con plantilla HTML profesional & 100\% \\
+18 & Consulta IA & \texttt{POST /api/query} con Gemini & 100\% \\
+19 & Twilio WhatsApp real & Sandbox con mensajes Markdown & 100\% \\
+20 & Plantillas alerta HTML & Banderas y toponimias destacadas & 100\% \\
+21 & Autenticacion y monitoreo & Login, metricas, scheduler, export CSV & 100\% \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Resultados de Despliegue}
+
+El sistema se desplego exitosamente en Render (free tier) con:
+\begin{itemize}
+  \item Python 3.12.6 fijado via \texttt{.python-version}
+  \item Servidor Gunicorn con 2 workers
+  \item Variables de entorno configuradas en dashboard de Render
+  \item Health check endpoint \texttt{/api/health} retorna 200 OK
+  \item Tiempo de respuesta inicial ~30s (wake-up de free tier)
+\end{itemize}
+
+% ----------------------------------------------------------
+\section{Discussion}
+% ----------------------------------------------------------
+
+\lettrine[lines=2]{L}{}os resultados confirman la viabilidad de
+implementar un sistema de IA agente funcional utilizando APIs
+comerciales y un presupuesto de infraestructura minimo (Render free
+tier). La arquitectura Supervisor-Worker demostro ser efectiva para
+orquestar tareas de traduccion y notificacion de manera
+concurrente.
+
+\subsection{Lecciones Aprendidas}
+
+\begin{itemize}
+  \item \textbf{Limitaciones de cuota gratuita:} Gemini API impone
+  limites de tasa (429) que requieren reintentos con backoff
+  exponencial y un sistema de fallback robusto.
+  \item \textbf{Sandbox de Twilio:} solo numeros registrados
+  manualmente pueden recibir mensajes, lo que limita la
+  escalabilidad inmediata.
+  \item \textbf{Concurrencia Python:} el \texttt{Global
+  Interpreter Lock (GIL)} limita el paralelismo real, pero
+  \texttt{threading} es suficiente para operaciones de I/O como
+  llamadas API.
+  \item \textbf{Render free tier:} el servicio duerme tras 15
+  minutos de inactividad, requiriendo ~30s para reactivarse.
+\end{itemize}
+
+\subsection{Trabajo Futuro}
+
+Como lineas de trabajo futuro se identifican:
+\begin{itemize}
+  \item Migracion a un plan de pago de Gemini API para eliminar
+  los fallbacks por cuota.
+  \item Integracion de Twilio con numeros verificados (fuera del
+  Sandbox) para envio a destinatarios no registrados.
+  \item Implementacion de una base de datos SQL (PostgreSQL) para
+  reemplazar la persistencia en JSON plano.
+  \item Autenticacion multi-usuario con roles (admin, lector).
+  \item Notificaciones push via Firebase Cloud Messaging.
+\end{itemize}
+
+% ----------------------------------------------------------
+\section{Conclusiones}
+% ----------------------------------------------------------
+
+\begin{enumerate}
+  \item Se implemento un sistema completo de IA agente que
+  automatiza el ciclo de deteccion, traduccion y notificacion de
+  alertas turisticas en Cusco.
+  \item El pipeline Supervisor-Worker con traduccion concurrente
+  en tres idiomas alcanza una latencia promedio de 5.5 segundos,
+  cumpliendo el requisito de menos de 8 segundos.
+  \item Las 21 historias de usuario (CUN-01 a CUN-21) fueron
+  implementadas y validadas, cubriendo percepcion, razonamiento,
+  accion y administracion.
+  \item La integracion de APIs reales (Gemini, SMTP, Twilio)
+  reemplazo los mocks del Sprint 3, demostrando la viabilidad
+  tecnica del sistema en un entorno de produccion.
+  \item El despliegue en Render con Python 3.12.6 y Gunicorn
+  proporciona una plataforma accesible para demostraciones y
+  validacion con el patrocinador.
+  \item El sistema preserva la integridad de las toponimias
+  sagradas mediante system prompts y validacion visual en el
+  frontend.
+\end{enumerate}
+
+% ----------------------------------------------------------
+\section*{Repositorio de Codigo}
+% ----------------------------------------------------------
+
+\begin{center}
+\small\url{https://github.com/Honorio-Morales/cusconodes}
+\end{center}
+
+% ----------------------------------------------------------
+\section*{Comandos de Reproduccion}
+% ----------------------------------------------------------
+
+\begin{lstlisting}[language=bash, numbers=none, frame=single,
+  basicstyle=\ttfamily\fontsize{8}{9}\selectfont]
+# Clonar repositorio
+git clone https://github.com/Honorio-Morales/cusconodes.git
+cd cusconodes
+
+# Crear entorno virtual
+python3 -m venv venv && source venv/bin/activate
+
+# Instalar dependencias
+pip install -r requirements.txt
+
+# Copiar y editar variables de entorno
+cp .env.example .env
+
+# Iniciar servidor local
+python web_server.py
+# Abrir http://127.0.0.1:5000
+\end{lstlisting}
+
+% ----------------------------------------------------------
+\section*{Reconocimientos}
+% ----------------------------------------------------------
+
+Se agradece a la Escuela Profesional de Ingenieria de Sistemas de
+la Universidad Andina del Cusco por el espacio academico para el
+desarrollo de este trabajo, y al patrocinador Israel Rondan de PDS
+Viajes por la orientacion en las necesidades del dominio turistico.
+
+% ----------------------------------------------------------
+\section*{Referencias}
+% ----------------------------------------------------------
+\begingroup
+\small
+\begin{enumerate}
+\setlength{\itemsep}{0pt}
+\setlength{\parsep}{0pt}
+
+\item Ministerio de Comercio Exterior y Turismo del Peru,
+  ``Perfil del Turista Extranjero 2024,'' MINCETUR, Lima, Peru,
+  2024.
+
+\item M. Wooldridge, \textit{An Introduction to MultiAgent
+  Systems}, 2nd ed. Chichester, UK: Wiley, 2009.
+
+\item E. H. Durfee, ``Distributed problem solving and planning,''
+  in \textit{Multi-Agent Systems}, G. Weiss, Ed. Cambridge, MA:
+  MIT Press, 2013, ch. 3, pp. 69--130.
+
+\item Google DeepMind, ``Gemini: A family of highly capable
+  multimodal models,'' 2024. [Online]. Available:
+  \url{https://arxiv.org/abs/2312.11805}
+
+\item A. Vaswani et al., ``Attention is all you need,''
+  in \textit{Proc. NeurIPS}, pp. 5998--6008, 2017.
+
+\item J. Dean and S. Ghemawat, ``MapReduce: Simplified data
+  processing on large clusters,'' in \textit{Proc. OSDI},
+  pp. 137--150, 2004.
+
+\item G. E. Box and D. R. Cox, ``An analysis of transformations,''
+  \textit{Journal of the Royal Statistical Society, Series B},
+  vol. 26, no. 2, pp. 211--252, 1964.
+
+\item Python Software Foundation, ``threading -- Thread-based
+  parallelism,'' Python 3.12 Documentation, 2024. [Online].
+  Available: \url{https://docs.python.org/3/library/threading.html}
+
+\item Render Inc., ``Python version,'' Render Docs, 2026.
+  [Online]. Available: \url{https://render.com/docs/python-version}
+
+\end{enumerate}
+\endgroup
+
+\end{document}
