@@ -9,13 +9,9 @@
     <style>
         @keyframes fade-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .anim-pulse-clean { animation: fade-pulse 2s infinite; }
-        .login-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: rgba(15,23,42,0.7); backdrop-filter: blur(4px); }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans min-h-screen antialiased">
-
-    <!-- Login Overlay (disabled - public access) -->
-    <div id="login-overlay" class="login-overlay hidden"></div>
 
     <header class="border-b border-slate-200 bg-white/80 backdrop-blur sticky top-0 z-50 px-8 py-4 flex justify-between items-center shadow-xs">
         <div>
@@ -296,14 +292,6 @@
             const el = document.getElementById(id);
             el.className = "text-[10px] font-bold font-mono " + cls + " px-2 py-0.5 rounded border";
             el.innerText = text;
-        }
-
-        // Auth
-        async function checkAuth() {
-            document.getElementById('btn-logout').classList.add('hidden');
-            document.getElementById('metrics-strip').classList.remove('hidden');
-            document.getElementById('chart-container').classList.remove('hidden');
-            loadDashboard();
         }
 
         async function doLogout() {
@@ -590,7 +578,9 @@
         }
 
         // Init
-        checkAuth();
+        document.getElementById('metrics-strip').classList.remove('hidden');
+        document.getElementById('chart-container').classList.remove('hidden');
+        loadDashboard();
     </script>
 </body>
 </html>
