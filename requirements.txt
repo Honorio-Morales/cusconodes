@@ -14,6 +14,10 @@ python-dotenv==1.0.0
 # Scheduling (para ejecución constante)
 APScheduler==3.10.4
 
+# Web Server
+flask>=3.0.0
+flask-cors>=5.0.0
+
 # API Integration
 google-genai==2.7.0
 twilio==9.6.2
