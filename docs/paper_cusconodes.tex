@@ -498,7 +498,9 @@ El sistema se desplego exitosamente en Render (free tier) con:
   \item Servidor Gunicorn con 2 workers
   \item Variables de entorno configuradas en dashboard de Render
   \item Health check endpoint \texttt{/api/health} retorna 200 OK
-  \item Tiempo de respuesta inicial ~30s (wake-up de free tier)
+   \item Tiempo de respuesta inicial ~30s (wake-up de free tier)
+   \item Credenciales por defecto: usuario \texttt{admin}, contrasena \texttt{cusconodes2025} (configurable via \texttt{ADMIN\_PASSWORD})
+   \item Sesiones persistentes con \texttt{FLASK\_SECRET\_KEY} fijo para consistencia entre workers de Gunicorn
 \end{itemize}
 
 La Figura~3 muestra el panel de administracion con metricas
@@ -614,6 +616,7 @@ pip install -r requirements.txt
 
 # Copiar y editar variables de entorno
 cp .env.example .env
+# Credenciales por defecto: admin / cusconodes2025
 
 # Iniciar servidor local
 python web_server.py

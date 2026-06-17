@@ -16,7 +16,12 @@ from src.config.settings import Settings
 from google import genai
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY", os.urandom(24).hex())
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "cusconodes-sesion-secret-key-2025")
+app.config.update(
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SECURE=os.getenv("PROJECT_ENV") == "production"
+)
 CORS(app, supports_credentials=True)
 
 HISTORY_FILE = os.path.join("data", "processed", "history.json")

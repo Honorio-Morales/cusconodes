@@ -1,0 +1,633 @@
+% =========================================================
+%  Paper: Implementacion de un Perceptron desde Cero
+%  Plantilla RATE — Revista Argentina de Trabajos Estudiantiles
+%  Formato dos columnas, A4, estilo IEEE
+%  Compatible con pdfLaTeX (TeXpage)
+% =========================================================
+\documentclass[10pt,twocolumn,a4paper]{article}
+
+% ----------------------------------------------------------
+% Paquetes
+% ----------------------------------------------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,provide=*]{babel}
+\usepackage{times}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{caption}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{lettrine}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{footnote}
+\usepackage{dblfloatfix}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% ----------------------------------------------------------
+% Geometria de pagina
+% ----------------------------------------------------------
+\geometry{
+  a4paper,
+  top=19mm,
+  bottom=30mm,
+  left=13mm,
+  right=13mm,
+  columnsep=4mm
+}
+
+% ----------------------------------------------------------
+% Configuracion listings
+% ----------------------------------------------------------
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\fontsize{7}{8}\selectfont,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape,
+  stringstyle=\ttfamily,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=4pt,
+  showstringspaces=false,
+  tabsize=2,
+  captionpos=b
+}
+
+% ----------------------------------------------------------
+% Tipografia y espaciado
+% ----------------------------------------------------------
+\setlength{\parindent}{3.5mm}
+\setlength{\parskip}{0pt}
+
+% ----------------------------------------------------------
+% Encabezado / pie
+% ----------------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+% ----------------------------------------------------------
+% Formato de secciones
+% ----------------------------------------------------------
+\titleformat{\section}
+  {\normalsize\bfseries\centering\scshape}
+  {\Roman{section}.}{0.5em}{}
+\titlespacing{\section}{0pt}{6pt}{4pt}
+
+\titleformat{\subsection}
+  {\normalsize\itshape}
+  {\Alph{subsection}.}{0.5em}{}
+\titlespacing{\subsection}{0pt}{4pt}{2pt}
+
+% ----------------------------------------------------------
+% Captions
+% ----------------------------------------------------------
+\captionsetup[figure]{
+  labelsep=period,
+  font={small},
+  justification=centering,
+  position=below
+}
+\captionsetup[table]{
+  labelsep=newline,
+  font={small,sc},
+  justification=centering,
+  position=above,
+  name=TABLA
+}
+
+% ----------------------------------------------------------
+% Titulo en una sola columna
+% ----------------------------------------------------------
+\makeatletter
+\renewcommand{\maketitle}{%
+  \twocolumn[{%
+    \begin{center}
+      {\fontsize{24}{28}\selectfont\@title\par}
+      \vspace{4mm}
+      {\normalsize\@author\par}
+    \end{center}
+    \vspace{4mm}
+  }]%
+  \footnotetext{$^*$ Trabajo presentado como actividad academica en la
+    asignatura de Inteligencia Artificial, Universidad Andina del
+    Cusco.}%
+}
+\makeatother
+
+% ----------------------------------------------------------
+% Metadatos
+% ----------------------------------------------------------
+\title{Implementacion de un Perceptron desde Cero:\
+       Clasificacion Binaria con Multiples Funciones de Activacion\
+       y Validacion Multilenguaje}
+
+\author{%
+  Honorio Morales Ttito$^*$  Sebastian Zavaleta Luna$^*$  Sayo Michael Torres Caceres $^*$ \hfill Escuela Profesional de Ingenieria de Sistemas \\
+  \textit{Universidad Andina del Cusco, Cusco, Peru}
+}
+
+\date{}
+
+% =========================================================
+\begin{document}
+% =========================================================
+
+\maketitle
+\thispagestyle{fancy}
+
+% ----------------------------------------------------------
+% Resumen / Abstract
+% ----------------------------------------------------------
+\noindent\textbf{\textit{Resumen}}---Este trabajo presenta la
+implementacion de un perceptron desde cero para clasificacion
+binaria, sin usar librerias de aprendizaje automatico como
+scikit-learn o TensorFlow/Keras. El sistema integra seis funciones de
+activacion (lineal, escalon, sigmoidal, ReLU, softmax y tangente
+hiperbolica) y se evalua en seis casos: AND, OR, spam, clima, fraude
+y riesgo academico. Ademas de la version original en Python, se
+organizo una arquitectura multilenguaje con implementaciones en Java,
+JavaScript y C\#, junto con una pagina web estatica para navegacion
+del proyecto. En Python se obtuvo convergencia perfecta para AND y OR
+(accuracy = 1.0), mientras que en problemas sinteticos se observo
+accuracy entre 0.62 y 0.96.
+
+\smallskip
+\noindent\textbf{\textit{Abstract}}---This paper presents a
+from-scratch perceptron implementation for binary classification,
+without using machine learning libraries such as scikit-learn or
+TensorFlow/Keras. The system includes six activation functions
+(linear, step, sigmoid, ReLU, softmax, and hyperbolic tangent) and is
+evaluated on six tasks: AND, OR, spam, weather, fraud, and academic
+risk. Beyond the original Python version, a multi-language
+architecture was organized with Java, JavaScript, and C\#
+implementations, plus a static web page to navigate project contents.
+Python achieved perfect convergence for AND and OR (accuracy = 1.0),
+while synthetic tasks showed accuracy between 0.62 and 0.96.
+
+% ----------------------------------------------------------
+\section{Introduccion}
+% ----------------------------------------------------------
+
+\lettrine[lines=2]{E}{}l perceptron, propuesto por Rosenblatt en
+1958~[1], representa una base teorica y practica para comprender el
+aprendizaje supervisado en redes neuronales. Aunque existen
+frameworks modernos de alto nivel, la implementacion desde cero
+permite analizar con detalle la actualizacion de pesos, el rol de la
+funcion de activacion y las limitaciones de la separabilidad lineal.
+
+El proyecto se inicio con una implementacion funcional en Python y fue
+extendido a una arquitectura multilenguaje para cumplir una entrega
+academica completa. Actualmente el repositorio contiene:
+\begin{itemize}
+  \item nucleo del perceptron y activaciones,
+  \item seis casos de clasificacion binaria,
+  \item exportacion de resultados y graficas,
+  \item implementaciones equivalentes en Java, JavaScript y C\#,
+  \item pagina web estatica para documentacion y navegacion.
+\end{itemize}
+
+El repositorio del proyecto se encuentra en:
+\begin{center}
+\small\url{https://github.com/Honorio-Morales/perceptrondiez}
+\end{center}
+
+% ----------------------------------------------------------
+\section{Fundamento Teorico}
+% ----------------------------------------------------------
+
+\subsection{Modelo del Perceptron}
+
+Un perceptron monocapa calcula su salida mediante:
+\begin{equation}
+  \hat{y} = f\!\left(\sum_{j=1}^{n} w_j x_j + b\right) = f(\mathbf{w}^T\mathbf{x} + b)
+\end{equation}
+
+\noindent donde $\mathbf{x} \in \mathbb{R}^n$ es el vector de
+entradas, $\mathbf{w} \in \mathbb{R}^n$ el vector de pesos y $b$ el
+sesgo. La regla de aprendizaje por muestra es:
+\begin{equation}
+  \Delta w_j = \eta \cdot (y - \hat{y}) \cdot f'(z) \cdot x_j
+\end{equation}
+
+\noindent con $\eta$ como tasa de aprendizaje y
+$z = \mathbf{w}^T\mathbf{x} + b$. Para la funcion escalon se emplea
+la forma clasica de perceptron tomando $f'(z)=1$.
+
+\subsection{Funciones de Activacion}
+
+Las funciones implementadas y su rango de salida se resumen en la
+Tabla~I.
+
+\begin{table}[t]
+\caption{Funciones de Activacion Implementadas}
+\label{tab:activaciones}
+\centering
+\small
+\begin{tabular}{p{1.5cm}|p{3.2cm}|p{1.3cm}}
+\hline
+\textbf{Funcion} & \textbf{Expresion} & \textbf{Rango} \\
+\hline
+Lineal     & $f(z) = z$ & $(-\infty,\infty)$ \\
+\hline
+Escalon    & $f(z) = \begin{cases}1 & z \ge 0\\0 & z < 0\end{cases}$ & $\{0,1\}$ \\
+\hline
+Sigmoidal  & $f(z) = \dfrac{1}{1+e^{-z}}$ & $(0,1)$ \\
+\hline
+ReLU       & $f(z) = \max(0, z)$ & $[0,\infty)$ \\
+\hline
+Softmax    & $f(z_i) = \dfrac{e^{z_i}}{\sum_j e^{z_j}}$ & $(0,1)$ \\
+\hline
+Tanh       & $f(z) = \tanh(z)$ & $(-1,1)$ \\
+\hline
+\end{tabular}
+\end{table}
+
+% ----------------------------------------------------------
+\section{Metodologia}
+% ----------------------------------------------------------
+
+\subsection{Arquitectura del Software}
+
+La solucion se organiza por capas y por lenguaje:
+\begin{itemize}
+  \item \textbf{Python:} modulo principal de referencia
+  (\texttt{main.py}, \texttt{nucleo/}, \texttt{casos/}).
+  \item \textbf{Implementaciones:}
+  \texttt{implementaciones/java/},
+  \texttt{implementaciones/javascript/},
+  \texttt{implementaciones/csharp/}.
+  \item \textbf{Presentacion:} pagina estatica
+  \texttt{web/index.html} para mostrar alcance del proyecto.
+\end{itemize}
+
+Cada implementacion mantiene la restriccion de epocas mayor o igual a
+10 y ejecuta seis casos de clasificacion binaria.
+
+La Figura~\ref{fig:arquitectura} resume el flujo general del experimento aplicado en los
+cuatro lenguajes del proyecto.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_arquitectura_perceptron.png}
+\caption{Arquitectura general del flujo de entrenamiento, prediccion y evaluacion del perceptron.}
+\label{fig:arquitectura}
+\end{figure}
+
+\subsection{Conjunto de Datos}
+
+Los casos AND y OR usan tablas de verdad clasicas. Los cuatro casos
+restantes se generan de manera sintetica con semillas fijas para
+reproducibilidad:
+\begin{itemize}
+  \item \textbf{Spam (100 muestras):} longitud de asunto, numero de
+  enlaces, presencia de oferta y remitente desconocido.
+  \item \textbf{Clima (100 muestras):} temperatura, humedad y presion
+  normalizadas.
+  \item \textbf{Fraude (100 muestras):} monto, hora, distancia e
+  intentos fallidos.
+  \item \textbf{Riesgo academico (100 muestras):} asistencia,
+  promedio, entregas pendientes y horas de estudio.
+\end{itemize}
+
+\subsection{Metricas de Evaluacion}
+
+Se utilizaron las metricas Accuracy, Precision y Recall:
+\begin{equation}
+  \text{Accuracy} = \frac{VP + VN}{VP + VN + FP + FN}
+\end{equation}
+
+\begin{equation}
+  \text{Precision} = \frac{VP}{VP + FP}
+  \qquad
+  \text{Recall} = \frac{VP}{VP + FN}
+\end{equation}
+
+Adicionalmente, para analizar estabilidad de aprendizaje se monitoreo
+el error cuadratico medio (ECM) por epoca:
+\begin{equation}
+  \text{ECM}_t = \frac{1}{N}\sum_{i=1}^{N}(y_i-\hat{y}_i)^2
+\end{equation}
+
+\subsection{Flujo Experimental}
+
+El flujo seguido para cada lenguaje fue uniforme:
+\begin{enumerate}
+  \item inicializacion de pesos en cero y sesgo nulo,
+  \item seleccion de funcion de activacion segun el caso,
+  \item entrenamiento por epocas con actualizacion muestra a muestra,
+  \item evaluacion con Accuracy, Precision y Recall,
+  \item consolidacion de resultados para comparacion cruzada.
+\end{enumerate}
+
+Este diseno permitio evitar sesgos por diferencias de pipeline y
+centrar el analisis en comportamiento numerico y convergencia.
+
+\subsection{Complejidad Computacional}
+
+Para un perceptron monocapa con $N$ muestras, $d$ caracteristicas y
+$E$ epocas, el costo de entrenamiento es:
+\begin{equation}
+  \mathcal{O}(E\cdot N\cdot d)
+\end{equation}
+
+Como los cuatro casos sinteticos usan $N=100$ y $d\in\{3,4\}$, los
+tiempos de ejecucion son bajos en todos los lenguajes analizados,
+facilitando pruebas repetidas y ajustes de hiperparametros.
+
+% ----------------------------------------------------------
+\section{Resultados}
+% ----------------------------------------------------------
+
+\subsection{Resultados de Referencia en Python}
+
+La Tabla~II presenta los resultados oficiales obtenidos en la
+implementacion Python, que se utiliza como referencia del proyecto.
+
+Como evidencia visual de convergencia, la Figura~\ref{fig:ecm_python} muestra las curvas
+de error cuadratico medio para los seis casos en Python.
+
+\begin{table}[t]
+\caption{Resultados de los Seis Casos en Python}
+\label{tab:resultados_python}
+\centering
+\small
+\begin{tabular}{p{2.1cm}|c|c|c|c}
+\hline
+\textbf{Caso} & \textbf{Activ.} & \textbf{Epocas} & \textbf{Acc.} & \textbf{Prec.} \\
+\hline
+AND Logico       & escalon   & 15 & 1.0000 & 1.0000 \\
+OR Logico        & escalon   & 15 & 1.0000 & 1.0000 \\
+Spam             & sigmoidal & 50 & 0.8300 & 0.8333 \\
+Clima            & tanh      & 50 & 0.7000 & 0.6296 \\
+Fraude           & relu      & 50 & 0.6200 & 0.0000 \\
+Riesgo Academico & sigmoidal & 50 & 0.9600 & 0.9649 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_ecm_python_panel.png}
+\caption{Panel de curvas ECM por caso en la implementacion Python.}
+\label{fig:ecm_python}
+\end{figure}
+
+\subsection{Comparacion Multilenguaje}
+
+La Tabla~III compara accuracy por lenguaje para los entornos
+actualmente ejecutables (Python, Java y JavaScript).
+
+\begin{table}[t]
+\caption{Comparacion de Accuracy por Lenguaje}
+\label{tab:multi}
+\centering
+\small
+\begin{tabular}{p{1.8cm}|c|c|c}
+\hline
+\textbf{Caso} & \textbf{Python} & \textbf{Java} & \textbf{JS} \\
+\hline
+AND    & 1.0000 & 1.0000 & 1.0000 \\
+OR     & 1.0000 & 1.0000 & 1.0000 \\
+Spam   & 0.8300 & 0.7700 & 0.8400 \\
+Clima  & 0.7000 & 0.6300 & 0.6300 \\
+Fraude & 0.6200 & 0.6600 & 0.6600 \\
+Riesgo & 0.9600 & 0.8900 & 0.9000 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_accuracy_multilenguaje.png}
+\caption{Comparacion visual de accuracy entre Python, Java y JavaScript.}
+\label{fig:acc_multi}
+\end{figure}
+
+En C\# los seis casos ya estan implementados, pero en el entorno de
+prueba no fue posible ejecutar validacion automatica por ausencia del
+comando \texttt{dotnet}.
+
+\subsection{Precision y Recall por Lenguaje}
+
+La Tabla~IV agrega precision y recall para Java y JavaScript,
+permitiendo interpretar mejor los falsos positivos y falsos
+negativos, especialmente en fraude y clima.
+
+\begin{table}[t]
+\caption{Metricas Detalladas en Java y JavaScript}
+\label{tab:detalladas_multi}
+\centering
+\small
+\begin{tabular}{p{1.5cm}|c|c|c|c}
+\hline
+\textbf{Caso} & \textbf{J-Prec} & \textbf{J-Rec} & \textbf{JS-Prec} & \textbf{JS-Rec} \\
+\hline
+AND    & 1.0000 & 1.0000 & 1.0000 & 1.0000 \\
+OR     & 1.0000 & 1.0000 & 1.0000 & 1.0000 \\
+Spam   & 0.6667 & 0.9545 & 0.7681 & 1.0000 \\
+Clima  & 0.5647 & 1.0000 & 0.5843 & 1.0000 \\
+Fraude & 0.0000 & 0.0000 & 0.0000 & 0.0000 \\
+Riesgo & 0.9487 & 0.8043 & 0.9348 & 0.8600 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_precision_recall_multilenguaje.png}
+\caption{Precision y recall por caso para Java y JavaScript.}
+\label{fig:pr_multi}
+\end{figure}
+
+\subsection{Analisis por Caso}
+
+\textbf{AND y OR.} Ambos problemas convergen de forma exacta, lo cual
+era esperable por su separabilidad lineal. Este resultado funciona
+como prueba de sanidad para validar la implementacion base del
+algoritmo en cada lenguaje.
+
+\textbf{Spam.} La activacion sigmoidal mantiene un desempeno robusto
+en los tres entornos ejecutados. El recall alto en Java y JavaScript
+sugiere buena recuperacion de la clase positiva, aunque con diferente
+nivel de precision.
+
+\textbf{Clima.} Se observa sensibilidad al umbral con tanh. Aunque el
+recall es alto en Java/JS, la precision moderada indica que la
+frontera lineal propuesta no separa limpiamente todas las regiones del
+espacio de entrada.
+
+\textbf{Fraude.} Es el escenario mas desafiante. Precision y recall
+nulos en Java/JS, y precision nula en Python, muestran que la
+configuracion actual (activacion relu + una sola neurona) no captura
+adecuadamente el patron sintetico.
+
+\textbf{Riesgo academico.} Se mantiene como el mejor caso sintetico,
+con metricas altas y comportamiento estable entre implementaciones.
+
+% ----------------------------------------------------------
+\section{Discusion}
+% ----------------------------------------------------------
+
+\lettrine[lines=2]{L}{}os resultados confirman que el perceptron
+resuelve de forma exacta problemas linealmente separables (AND y OR)
+en todos los lenguajes evaluados. En los casos sinteticos se observan
+diferencias moderadas entre implementaciones, atribuibles a
+particularidades numericas de cada runtime y a variaciones en los
+generadores pseudoaleatorios.
+
+La activacion sigmoidal mantiene el mejor comportamiento global para
+clasificacion binaria en este proyecto. En contraste, el caso de
+fraude conserva baja precision, lo que sugiere combinacion de baja
+separabilidad lineal y sensibilidad de ReLU en un modelo monocapa.
+Esto es consistente con las limitaciones teoricas del perceptron como
+clasificador lineal.
+
+Tambien se debe considerar que la comparacion multilenguaje no es una
+prueba de equivalencia bit a bit: cada runtime usa generadores
+aleatorios y operaciones de punto flotante con pequenas diferencias
+internas. Por ello, se priorizo consistencia metodologica sobre
+identidad numerica exacta.
+
+\subsection{Amenazas a la Validez}
+
+\begin{itemize}
+  \item \textbf{Validez interna:} el entrenamiento y evaluacion se
+  realizan sobre el mismo conjunto en varios casos, lo que puede
+  sobreestimar desempeno.
+  \item \textbf{Validez externa:} los datos de spam, clima, fraude y
+  riesgo son sinteticos; no representan toda la complejidad del mundo
+  real.
+  \item \textbf{Validez de constructo:} softmax se adapta a un
+  contexto binario simplificado en perceptron monocapa; en escenarios
+  multiclase se requeriria formulacion especifica.
+\end{itemize}
+
+% ----------------------------------------------------------
+\section{Conclusiones}
+% ----------------------------------------------------------
+
+\begin{enumerate}
+  \item Se implemento un perceptron desde cero con seis funciones de
+  activacion y restriccion de epocas mayor o igual a 10.
+  \item Se logro cobertura funcional de seis casos de clasificacion
+  binaria en Python, Java y JavaScript, y se completo la base
+  equivalente en C\#.
+  \item La arquitectura actual del repositorio facilita desarrollo
+  colaborativo, comparacion de resultados y trazabilidad academica.
+  \item La pagina web estatica complementa la entrega al presentar de
+  manera clara el alcance y las implementaciones del proyecto.
+\end{enumerate}
+
+Como trabajo futuro se propone incorporar particion entrenamiento/prueba
+uniforme en todos los lenguajes, calibracion de umbrales y extension
+hacia perceptron multicapa con retropropagacion.
+
+% ----------------------------------------------------------
+\section*{Anexo Tecnico}
+% ----------------------------------------------------------
+
+Para fines de trazabilidad, el siguiente pseudocodigo resume el ciclo
+de entrenamiento utilizado en las implementaciones:
+
+\begin{lstlisting}[language=Python,caption={Pseudocodigo del entrenamiento del perceptron}]
+for epoca in range(epocas):
+  for i in range(n_muestras):
+    z = dot(X[i], pesos) + sesgo
+    y_hat = activacion(z)
+    error = y[i] - y_hat
+
+    if activacion == "escalon":
+      ajuste = lr * error
+    else:
+      ajuste = lr * error * derivada(z)
+
+    pesos += ajuste * X[i]
+    sesgo += ajuste
+\end{lstlisting}
+
+Esta formulacion se mantuvo conceptualmente constante en Python, Java,
+JavaScript y C\#, permitiendo comparar comportamiento del modelo bajo
+un mismo criterio de aprendizaje.
+
+% ----------------------------------------------------------
+\section*{Repositorio de Codigo}
+% ----------------------------------------------------------
+
+\begin{center}
+\small\url{https://github.com/Honorio-Morales/perceptrondiez}
+\end{center}
+
+% ----------------------------------------------------------
+\section*{Comandos de Reproduccion}
+% ----------------------------------------------------------
+
+\begin{lstlisting}[language=bash, numbers=none, frame=single,
+  basicstyle=\ttfamily\fontsize{8}{9}\selectfont]
+# Python
+/home/honorio/IA/perceptron/venv/bin/python main.py
+
+# Java
+javac implementaciones/java/src/*.java
+java -cp implementaciones/java/src Main
+
+# JavaScript
+node implementaciones/javascript/main.js
+\end{lstlisting}
+
+% ----------------------------------------------------------
+\section*{Reconocimientos}
+% ----------------------------------------------------------
+
+Se agradece a la Escuela Profesional de Ingenieria de Sistemas de la
+Universidad Andina del Cusco por el espacio academico para el
+desarrollo de este trabajo.
+
+% ----------------------------------------------------------
+\section*{Referencias}
+% ----------------------------------------------------------
+\begingroup
+\small
+\begin{enumerate}
+\setlength{\itemsep}{0pt}
+\setlength{\parsep}{0pt}
+
+\item F. Rosenblatt, ``The perceptron: A probabilistic model for
+  information storage and organization in the brain,''
+  \textit{Psychological Review}, vol. 65, no. 6, pp. 386--408, 1958.
+
+\item M. Minsky and S. Papert, \textit{Perceptrons: An Introduction
+  to Computational Geometry.} Cambridge, MA: MIT Press, 1969.
+
+\item I. Goodfellow, Y. Bengio, and A. Courville,
+  \textit{Deep Learning.} Cambridge, MA: MIT Press, 2016.
+
+\item S. Haykin, \textit{Neural Networks and Learning Machines,}
+  3rd ed. Upper Saddle River, NJ: Pearson, 2009.
+
+\item C. M. Bishop, \textit{Pattern Recognition and Machine
+  Learning.} New York: Springer, 2006.
+
+\item V. Nair and G. E. Hinton, ``Rectified linear units improve
+  restricted Boltzmann machines,'' in \textit{Proc. ICML},
+  pp. 807--814, 2010.
+
+\item X. Glorot, A. Bordes, and Y. Bengio, ``Deep sparse rectifier
+  neural networks,'' in \textit{Proc. AISTATS},
+  pp. 315--323, 2011.
+
+\end{enumerate}
+\endgroup
+
+\end{document}

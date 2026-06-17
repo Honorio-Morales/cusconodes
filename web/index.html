@@ -296,6 +296,7 @@
 
     <script>
         const API = '';
+        function api(url, opts) { opts = opts || {}; opts.credentials = 'include'; return fetch(API + url, opts); }
 
         function highlightToponymies(text) {
             const terms = ["Machu Picchu", "Ollantaytambo", "Sacsayhuamán", "Pisac", "Chinchero", "Urubamba", "Vallée Sacrée", "Vale Sagrado", "Sacred Valley"];
@@ -316,7 +317,7 @@
         // Auth
         async function checkAuth() {
             try {
-                const r = await fetch(API + '/api/auth/status');
+                const r = await api('/api/auth/status');
                 const d = await r.json();
                 if (d.authenticated) {
                     document.getElementById('login-overlay').classList.add('hidden');
@@ -331,7 +332,7 @@
         async function doLogin() {
             const pw = document.getElementById('login-password').value;
             try {
-                const r = await fetch(API + '/api/login', {
+                const r = await api('/api/login', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({password: pw})
@@ -352,7 +353,7 @@
         }
 
         async function doLogout() {
-            await fetch(API + '/api/logout', {method: 'POST'});
+            await api('/api/logout', {method: 'POST'});
             location.reload();
         }
 
@@ -371,7 +372,7 @@
 
         async function loadMetrics() {
             try {
-                const r = await fetch(API + '/api/metrics');
+                const r = await api('/api/metrics');
                 const d = await r.json();
                 document.getElementById('m-total').innerText = d.total_ejecuciones;
                 document.getElementById('m-exito').innerText = d.tasa_exito + '%';
@@ -415,7 +416,7 @@
             });
 
             try {
-                const response = await fetch(API + '/api/orchestrate', { method: 'POST' });
+                const response = await api('/api/orchestrate', { method: 'POST' });
                 if (response.status === 401) { doLogout(); return; }
                 const data = await response.json();
                 if (data.status === "error") throw new Error(data.message);
@@ -485,7 +486,7 @@
         async function loadHistory() {
             const container = document.getElementById('history-table');
             try {
-                const res = await fetch(API + '/api/history');
+                const res = await api('/api/history');
                 if (res.status === 401) { doLogout(); return; }
                 const entries = await res.json();
                 if (!entries.length) {
@@ -531,7 +532,7 @@
             log.scrollTop = log.scrollHeight;
             input.value = '';
             try {
-                const res = await fetch(API + '/api/query', {
+                const res = await api('/api/query', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({question})
@@ -556,7 +557,7 @@
         // Recipients
         async function loadRecipients() {
             try {
-                const res = await fetch(API + '/api/recipients');
+                const res = await api('/api/recipients');
                 if (res.status === 401) return;
                 const data = await res.json();
                 document.getElementById('input-whatsapp').value = data.whatsapp || '';
@@ -567,7 +568,7 @@
             const whatsapp = document.getElementById('input-whatsapp').value.trim();
             const email = document.getElementById('input-email').value.trim();
             try {
-                const res = await fetch(API + '/api/recipients', {
+                const res = await api('/api/recipients', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({whatsapp, email})
@@ -591,7 +592,7 @@
         // Scheduler
         async function loadSchedulerStatus() {
             try {
-                const r = await fetch(API + '/api/scheduler/status');
+                const r = await api('/api/scheduler/status');
                 if (r.status === 401) return;
                 const d = await r.json();
                 const running = d.running;
@@ -612,7 +613,7 @@
             const url = running ? '/api/scheduler/stop' : '/api/scheduler/start';
             const opts = running ? {} : {interval: parseInt(document.getElementById('scheduler-interval').value) || 30};
             try {
-                const r = await fetch(API + url, {
+                const r = await api(url, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(opts)
@@ -625,7 +626,7 @@
         // Monitoring
         async function loadMonitoring() {
             try {
-                const r = await fetch(API + '/api/monitoring');
+                const r = await api('/api/monitoring');
                 if (r.status === 401) return;
                 const d = await r.json();
                 document.getElementById('mon-success').innerText = d.success || 0;
@@ -636,7 +637,7 @@
 
         // Export
         function exportCSV() {
-            window.open(API + '/api/export/csv', '_blank');
+            api('/api/export/csv').then(r => r.blob()).then(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'historial_cusconodes.csv'; a.click(); });
         }
 
         // Init
