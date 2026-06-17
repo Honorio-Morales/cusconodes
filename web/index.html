@@ -332,16 +332,17 @@
 
         async function doLogin() {
             const btn = document.querySelector('#login-overlay button');
-            const errEl = document.getElementById('login-error');
             const pw = document.getElementById('login-password').value;
             btn.disabled = true; btn.innerText = 'Ingresando...';
-            errEl.classList.add('hidden');
+            console.log('doLogin: iniciando');
             try {
+                console.log('doLogin: llamando api...');
                 const r = await api('/api/login', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({password: pw})
                 });
+                console.log('doLogin: status=', r.status);
                 if (r.ok) {
                     document.getElementById('login-overlay').classList.add('hidden');
                     document.getElementById('btn-logout').classList.remove('hidden');
@@ -349,15 +350,17 @@
                     document.getElementById('chart-container').classList.remove('hidden');
                     loadDashboard();
                 } else {
-                    errEl.innerText = 'Error HTTP ' + r.status;
-                    errEl.classList.remove('hidden');
+                    btn.innerText = 'Error ' + r.status;
+                    btn.disabled = false;
+                    return;
                 }
             } catch (e) {
-                errEl.innerText = 'Error de red: ' + e.message;
-                errEl.classList.remove('hidden');
-            } finally {
-                btn.disabled = false; btn.innerText = 'Ingresar';
+                console.error('doLogin: catch', e);
+                btn.innerText = 'Error red';
+                btn.disabled = false;
+                return;
             }
+            btn.disabled = false; btn.innerText = 'Ingresar';
         }
 
         async function doLogout() {
