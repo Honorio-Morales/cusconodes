@@ -29,6 +29,7 @@ RECIPIENTS_FILE = os.path.join("data", "recipients.json")
 MONITORING_FILE = os.path.join("data", "monitoring.json")
 LOG_FILE = os.path.join("data", "pipeline.log")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "cusconodes2025")
+print(f"[INIT] ADMIN_PASSWORD='{ADMIN_PASSWORD}' (from env={repr(os.getenv('ADMIN_PASSWORD'))})")
 
 os.makedirs(os.path.join("data", "processed"), exist_ok=True)
 os.makedirs("logs", exist_ok=True)
@@ -104,7 +105,9 @@ def health():
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json(force=True)
-    if data.get("password") == ADMIN_PASSWORD:
+    received = data.get("password", "")
+    print(f"[LOGIN] received='{received}' (len={len(received)}) expected='{ADMIN_PASSWORD}' (len={len(ADMIN_PASSWORD)}) match={received == ADMIN_PASSWORD}")
+    if received == ADMIN_PASSWORD:
         session["authenticated"] = True
         session.permanent = True
         return jsonify({"status": "ok"}), 200
