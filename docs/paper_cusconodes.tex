@@ -175,14 +175,21 @@ proyecto fue desarrollado por el grupo HABA bajo el patrocinio de
 PDS Viajes, con el objetivo de integrar tecnologias de IA, APIs
 comerciales y canales de mensajeria en un pipeline cohesivo.
 
-El repositorio del proyecto se encuentra en:
+El proyecto se encuentra disponible en los siguientes enlaces:
 \begin{center}
-\small\url{https://github.com/Honorio-Morales/cusconodes}
+\small
+\url{https://github.com/Honorio-Morales/cusconodes} \\
+(GitHub -- codigo fuente)
 \end{center}
-
-La aplicacion desplegada esta disponible en:
 \begin{center}
-\small\url{https://cusconodes.onrender.com}
+\small
+\url{https://cusconodes.onrender.com} \\
+(Render -- aplicacion desplegada)
+\end{center}
+\begin{center}
+\small
+\url{https://honorio-morales.github.io/cusconodes/} \\
+(GitHub Pages -- poster academico)
 \end{center}
 
 % ----------------------------------------------------------
@@ -246,7 +253,8 @@ La solucion se organiza en tres capas principales:
   historial, metricas y controles de administracion.
 \end{itemize}
 
-La Figura~1 muestra la arquitectura de despliegue del sistema.
+La Figura~1 muestra la arquitectura de despliegue del sistema y la
+Figura~2 presenta una captura del dashboard operativo.
 
 \begin{figure}[t]
 \centering
@@ -263,6 +271,17 @@ Cliente Web $\rightarrow$ \\
 }}
 \caption{Arquitectura de despliegue del sistema CuscoNodes.}
 \label{fig:arquitectura}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\framebox[\columnwidth]{\parbox{0.9\columnwidth}{\centering\vspace*{3cm}
+{\small [Captura: Dashboard de CuscoNodes mostrando el pipeline
+de agentes (Supervisor, Traductor, Notificador) con estado
+FINALIZADO y metricas de desempeno.]}\vspace*{3cm}}}
+\caption{Dashboard de orquestacion en tiempo real del pipeline
+Supervisor-Worker.}
+\label{fig:dashboard}
 \end{figure}
 
 \subsection{Tecnologias Utilizadas}
@@ -482,6 +501,21 @@ El sistema se desplego exitosamente en Render (free tier) con:
   \item Tiempo de respuesta inicial ~30s (wake-up de free tier)
 \end{itemize}
 
+La Figura~3 muestra el panel de administracion con metricas
+en tiempo real, scheduler automatico y monitoreo del sistema.
+
+\begin{figure*}[t]
+\centering
+\framebox[\textwidth]{\parbox{0.95\textwidth}{\centering\vspace*{4cm}
+{\small [Captura: Panel de administracion con metricas en tiempo
+real (ejecuciones, tasa de exito, latencia promedio), grafico de
+alertas por dia, controles del scheduler automatico y panel de
+monitoreo del sistema.]}\vspace*{4cm}}}
+\caption{Panel de administracion con metricas, scheduler y
+monitoreo del sistema CuscoNodes.}
+\label{fig:admin}
+\end{figure*}
+
 % ----------------------------------------------------------
 \section{Discussion}
 % ----------------------------------------------------------
@@ -550,12 +584,17 @@ Como lineas de trabajo futuro se identifican:
 \end{enumerate}
 
 % ----------------------------------------------------------
-\section*{Repositorio de Codigo}
+\section*{Enlaces del Proyecto}
 % ----------------------------------------------------------
 
-\begin{center}
-\small\url{https://github.com/Honorio-Morales/cusconodes}
-\end{center}
+\begin{itemize}
+  \item \textbf{Codigo fuente:}
+  \url{https://github.com/Honorio-Morales/cusconodes}
+  \item \textbf{Aplicacion en vivo:}
+  \url{https://cusconodes.onrender.com}
+  \item \textbf{Poster academico:}
+  \url{https://honorio-morales.github.io/cusconodes/}
+\end{itemize}
 
 % ----------------------------------------------------------
 \section*{Comandos de Reproduccion}
