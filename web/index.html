@@ -318,6 +318,7 @@
         async function checkAuth() {
             try {
                 const r = await api('/api/auth/status');
+                if (!r.ok) return;
                 const d = await r.json();
                 if (d.authenticated) {
                     document.getElementById('login-overlay').classList.add('hidden');
@@ -326,17 +327,22 @@
                     document.getElementById('chart-container').classList.remove('hidden');
                     loadDashboard();
                 }
-            } catch {}
+            } catch (e) { console.warn('checkAuth fallo', e); }
         }
 
         async function doLogin() {
+            const btn = document.querySelector('#login-overlay button');
             const pw = document.getElementById('login-password').value;
+            btn.disabled = true; btn.innerText = 'Ingresando...';
+            document.getElementById('login-error').classList.add('hidden');
             try {
+                console.log('Login: enviando solicitud...');
                 const r = await api('/api/login', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({password: pw})
                 });
+                console.log('Login: respuesta', r.status);
                 if (r.ok) {
                     document.getElementById('login-overlay').classList.add('hidden');
                     document.getElementById('btn-logout').classList.remove('hidden');
@@ -345,10 +351,15 @@
                     document.getElementById('chart-container').classList.remove('hidden');
                     loadDashboard();
                 } else {
+                    const err = await r.json().catch(() => ({}));
+                    console.log('Login: error', err);
                     document.getElementById('login-error').classList.remove('hidden');
                 }
-            } catch {
+            } catch (e) {
+                console.error('Login: excepcion', e);
                 document.getElementById('login-error').classList.remove('hidden');
+            } finally {
+                btn.disabled = false; btn.innerText = 'Ingresar';
             }
         }
 
