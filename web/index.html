@@ -334,33 +334,27 @@
             const btn = document.querySelector('#login-overlay button');
             const pw = document.getElementById('login-password').value;
             btn.disabled = true; btn.innerText = 'Ingresando...';
-            console.log('doLogin: iniciando');
             try {
-                console.log('doLogin: llamando api...');
                 const r = await api('/api/login', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({password: pw})
                 });
-                console.log('doLogin: status=', r.status);
                 if (r.ok) {
+                    console.log('LOGIN OK, ocultando overlay');
                     document.getElementById('login-overlay').classList.add('hidden');
-                    document.getElementById('btn-logout').classList.remove('hidden');
-                    document.getElementById('metrics-strip').classList.remove('hidden');
-                    document.getElementById('chart-container').classList.remove('hidden');
-                    loadDashboard();
+                    console.log('overlay ocultado, verificando...');
+                    console.log('overlay hidden class:', document.getElementById('login-overlay').classList);
+                    location.reload();
                 } else {
                     btn.innerText = 'Error ' + r.status;
                     btn.disabled = false;
-                    return;
                 }
             } catch (e) {
                 console.error('doLogin: catch', e);
                 btn.innerText = 'Error red';
                 btn.disabled = false;
-                return;
             }
-            btn.disabled = false; btn.innerText = 'Ingresar';
         }
 
         async function doLogout() {
