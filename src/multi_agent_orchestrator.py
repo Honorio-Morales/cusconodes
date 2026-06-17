@@ -195,7 +195,7 @@ class NotifierWorker:
             msg.attach(MIMEText(html, "html"))
 
             print(f" 📧 [Agente Notificador] -> Conectando a {self.smtp_server}:{self.smtp_port}...")
-            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+            with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=15) as server:
                 server.starttls()
                 server.login(self.sender_email, self.sender_password)
                 server.sendmail(self.sender_email, to_email, msg.as_string())
