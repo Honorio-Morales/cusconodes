@@ -3,12 +3,13 @@ import io
 import json
 import logging
 import os
+import secrets
 import time
 from collections import Counter
 from datetime import datetime
 from functools import wraps
 from threading import Lock
-from flask import Flask, jsonify, request, send_from_directory, session, Response
+from flask import Flask, jsonify, request, send_from_directory, Response
 from flask_cors import CORS
 from apscheduler.schedulers.background import BackgroundScheduler
 from src.multi_agent_orchestrator import SupervisorAgent
@@ -16,13 +17,22 @@ from src.config.settings import Settings
 from google import genai
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "cusconodes-sesion-secret-key-2025")
-app.config.update(
-    SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=os.getenv("PROJECT_ENV") == "production"
-)
-CORS(app, supports_credentials=True)
+CORS(app)
+
+TOKEN_FILE = os.path.join("data", "auth_tokens.json")
+AUTH_TOKENS = set()
+
+def _load_tokens():
+    global AUTH_TOKENS
+    if os.path.exists(TOKEN_FILE):
+        with open(TOKEN_FILE, "r") as f:
+            AUTH_TOKENS = set(json.load(f))
+
+def _save_tokens():
+    with open(TOKEN_FILE, "w") as f:
+        json.dump(list(AUTH_TOKENS), f)
+
+_load_tokens()
 
 HISTORY_FILE = os.path.join("data", "processed", "history.json")
 RECIPIENTS_FILE = os.path.join("data", "recipients.json")
@@ -86,7 +96,9 @@ def _run_pipeline_job():
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not session.get("authenticated"):
+        _load_tokens()
+        token = request.headers.get("X-Auth-Token", "")
+        if token not in AUTH_TOKENS:
             return jsonify({"error": "Unauthorized"}), 401
         return f(*args, **kwargs)
     return decorated
@@ -105,24 +117,27 @@ def health():
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json(force=True)
-    received = data.get("password", "")
-    print(f"[LOGIN] received='{received}' (len={len(received)}) expected='{ADMIN_PASSWORD}' (len={len(ADMIN_PASSWORD)}) match={received == ADMIN_PASSWORD}")
-    if received == ADMIN_PASSWORD:
-        session["authenticated"] = True
-        session.permanent = True
-        return jsonify({"status": "ok"}), 200
+    if data.get("password") == ADMIN_PASSWORD:
+        token = secrets.token_hex(32)
+        AUTH_TOKENS.add(token)
+        _save_tokens()
+        return jsonify({"status": "ok", "token": token}), 200
     return jsonify({"error": "Contraseña incorrecta"}), 401
 
 
 @app.route('/api/logout', methods=['POST'])
 def logout():
-    session.clear()
+    token = request.headers.get("X-Auth-Token", "")
+    AUTH_TOKENS.discard(token)
+    _save_tokens()
     return jsonify({"status": "ok"}), 200
 
 
 @app.route('/api/auth/status')
 def auth_status():
-    return jsonify({"authenticated": session.get("authenticated", False)}), 200
+    token = request.headers.get("X-Auth-Token", "")
+    _load_tokens()
+    return jsonify({"authenticated": token in AUTH_TOKENS}), 200
 
 
 @app.route('/api/orchestrate', methods=['POST'])

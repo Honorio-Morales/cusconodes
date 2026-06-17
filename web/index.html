@@ -296,7 +296,15 @@
 
     <script>
         const API = '';
-        function api(url, opts) { opts = opts || {}; opts.credentials = 'include'; return fetch(API + url, opts); }
+        function api(url, opts) {
+            opts = opts || {};
+            const token = localStorage.getItem('auth_token');
+            if (token) {
+                opts.headers = opts.headers || {};
+                opts.headers['X-Auth-Token'] = token;
+            }
+            return fetch(API + url, opts);
+        }
 
         function highlightToponymies(text) {
             const terms = ["Machu Picchu", "Ollantaytambo", "Sacsayhuamán", "Pisac", "Chinchero", "Urubamba", "Vallée Sacrée", "Vale Sagrado", "Sacred Valley"];
@@ -318,14 +326,19 @@
         async function checkAuth() {
             try {
                 const r = await api('/api/auth/status');
-                if (!r.ok) return;
+                console.log('checkAuth: status=', r.status);
+                if (!r.ok) { console.log('checkAuth: response not ok'); return; }
                 const d = await r.json();
+                console.log('checkAuth: body=', JSON.stringify(d));
+                console.log('checkAuth: cookies=', document.cookie);
                 if (d.authenticated) {
                     document.getElementById('login-overlay').classList.add('hidden');
                     document.getElementById('btn-logout').classList.remove('hidden');
                     document.getElementById('metrics-strip').classList.remove('hidden');
                     document.getElementById('chart-container').classList.remove('hidden');
                     loadDashboard();
+                } else {
+                    console.log('checkAuth: NO autenticado');
                 }
             } catch (e) { console.warn('checkAuth fallo', e); }
         }
@@ -341,11 +354,13 @@
                     body: JSON.stringify({password: pw})
                 });
                 if (r.ok) {
-                    console.log('LOGIN OK, ocultando overlay');
+                    const data = await r.json();
+                    localStorage.setItem('auth_token', data.token);
                     document.getElementById('login-overlay').classList.add('hidden');
-                    console.log('overlay ocultado, verificando...');
-                    console.log('overlay hidden class:', document.getElementById('login-overlay').classList);
-                    location.reload();
+                    document.getElementById('btn-logout').classList.remove('hidden');
+                    document.getElementById('metrics-strip').classList.remove('hidden');
+                    document.getElementById('chart-container').classList.remove('hidden');
+                    loadDashboard();
                 } else {
                     btn.innerText = 'Error ' + r.status;
                     btn.disabled = false;
@@ -359,6 +374,7 @@
 
         async function doLogout() {
             await api('/api/logout', {method: 'POST'});
+            localStorage.removeItem('auth_token');
             location.reload();
         }
 
