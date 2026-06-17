@@ -52,44 +52,32 @@ class TranslatorWorker:
     """Agente Especializado en Traducción Turística Multilingüe con Gemini API (CUN-16)"""
     def __init__(self, target_lang):
         self.target_lang = target_lang
-
     def translate_text(self, text):
         print(f" 🔠 [Agente Traductor - {self.target_lang.upper()}]: Invocando Gemini API para traducción contextual...")
-        for attempt in range(MAX_RETRIES):
-            try:
-                prompt = f"{IDIOMA_PROMPTS[self.target_lang]}\n\nTexto original: {text}"
-                response = CLIENTE_GEMINI.models.generate_content(
-                    model=MODEL_NAME,
-                    contents=prompt,
-                    config=CONFIG_GEMINI
-                )
-                raw = response.text.strip()
+        try:
+            prompt = f"{IDIOMA_PROMPTS[self.target_lang]}\n\nTexto original: {text}"
+            response = CLIENTE_GEMINI.models.generate_content(
+                model=MODEL_NAME,
+                contents=prompt,
+                config=CONFIG_GEMINI
+            )
+            raw = response.text.strip()
 
-                if raw.startswith("```"):
-                    for prefix in ("```json\n", "```json", "```"):
-                        if raw.startswith(prefix):
-                            raw = raw.removeprefix(prefix)
-                    raw = raw.removesuffix("```").strip()
+            if raw.startswith("```"):
+                for prefix in ("```json\n", "```json", "```"):
+                    if raw.startswith(prefix):
+                        raw = raw.removeprefix(prefix)
+                raw = raw.removesuffix("```").strip()
 
-                result = json.loads(raw)
-                required = {"titulo", "contenido", "recomendaciones"}
-                if not required.issubset(result.keys()):
-                    raise ValueError(f"Campos faltantes: {required - result.keys()}")
-                print(f" ✅ [Agente Traductor - {self.target_lang.upper()}]: Traducción recibida de Gemini.")
-                return result
-
-            except Exception as e:
-                error_str = str(e)
-                if "429" in error_str or "quota" in error_str.lower() or "rate" in error_str.lower():
-                    wait = 2 ** attempt
-                    print(f" ⏳ [Agente Traductor - {self.target_lang.upper()}]: Cuota excedida, reintentando en {wait}s... (intento {attempt+1}/{MAX_RETRIES})")
-                    time.sleep(wait)
-                else:
-                    print(f" ⚠️ [Agente Traductor - {self.target_lang.upper()}]: Error Gemini ({e}). Usando fallback.")
-                    return self._fallback_translation(text)
-
-        print(f" ⚠️ [Agente Traductor - {self.target_lang.upper()}]: Máximos reintentos agotados. Usando fallback.")
-        return self._fallback_translation(text)
+            result = json.loads(raw)
+            required = {"titulo", "contenido", "recomendaciones"}
+            if not required.issubset(result.keys()):
+                raise ValueError(f"Campos faltantes: {required - result.keys()}")
+            print(f" ✅ [Agente Traductor - {self.target_lang.upper()}]: Traducción recibida de Gemini.")
+            return result
+        except Exception as e:
+            print(f" ⚠️ [Agente Traductor - {self.target_lang.upper()}]: Gemini falló ({type(e).__name__}: {e}). Usando fallback.")
+            return self._fallback_translation(text)
 
     def _fallback_translation(self, text):
         if "bloqueo" in text.lower() or "huelga" in text.lower():
