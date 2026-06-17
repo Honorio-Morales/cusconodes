@@ -1,0 +1,24 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "skills": {
+    "paths": [".opencode/skills"]
+  },
+  "references": {
+    "sprint4-report": {
+      "path": "REPORTE_TECNICO_SPRINT4.md",
+      "description": "Reporte técnico detallado del Sprint 4: APIs reales, dashboard, despliegue"
+    },
+    "sprint3-report": {
+      "path": "REPORTE_TECNICO_SPRINT3.md",
+      "description": "Reporte técnico del Sprint 3: arquitectura de agentes, endpoints, dashboard"
+    },
+    "changelog": {
+      "path": "CHANGELOG.md",
+      "description": "Historial de versiones y cambios del proyecto"
+    },
+    "docs": {
+      "path": "docs",
+      "description": "Documentación técnica del proyecto: arquitectura, sprints anteriores"
+    }
+  }
+}
