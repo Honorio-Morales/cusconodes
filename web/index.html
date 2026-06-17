@@ -3,28 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CuscoNodes - Sistema de Monitoreo Multi-Agente</title>
+    <title>CuscoNodes - Panel de Administración</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
     <style>
         @keyframes fade-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .anim-pulse-clean { animation: fade-pulse 2s infinite; }
+        .login-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: rgba(15,23,42,0.7); backdrop-filter: blur(4px); }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans min-h-screen antialiased">
 
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 w-full max-w-sm mx-4">
+            <div class="text-center mb-6">
+                <h1 class="text-xl font-bold tracking-tight text-slate-900">CUSCONODES</h1>
+                <p class="text-xs text-slate-500 mt-1 font-mono">Panel de Administración</p>
+            </div>
+            <div class="space-y-4">
+                <input id="login-password" type="password" placeholder="Contraseña de administrador"
+                    class="w-full text-sm border border-slate-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 font-mono">
+                <button onclick="doLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm px-5 py-2.5 rounded-lg transition cursor-pointer">
+                    Ingresar
+                </button>
+                <p id="login-error" class="text-xs text-rose-600 font-mono text-center hidden">Contraseña incorrecta</p>
+            </div>
+            <p class="text-[10px] text-slate-400 text-center mt-6 font-mono">Patrocinador: Israel Rondán | Grupo HABA</p>
+        </div>
+    </div>
+
     <header class="border-b border-slate-200 bg-white/80 backdrop-blur sticky top-0 z-50 px-8 py-4 flex justify-between items-center shadow-xs">
         <div>
             <h1 class="text-lg font-bold tracking-tight text-slate-900">CUSCONODES</h1>
-            <p class="text-xs text-slate-500 font-medium font-mono">Control de Operaciones Multi-Agente (Hito 4) | Grupo HABA</p>
+            <p class="text-xs text-slate-500 font-medium font-mono">Panel de Administración (Sprint 5) | Grupo HABA</p>
         </div>
         <div class="flex items-center gap-4">
             <span class="text-xs bg-slate-100 text-slate-700 border border-slate-300 rounded-md px-3 py-1.5 font-mono font-semibold">
                 Patrocinador: Israel Rondán
             </span>
+            <button id="btn-logout" onclick="doLogout()" class="text-xs bg-white border border-slate-300 text-slate-600 hover:bg-slate-100 px-3 py-1.5 rounded-lg transition cursor-pointer font-mono hidden">
+                Salir
+            </button>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-6 py-8">
+
+        <!-- Métricas -->
+        <div id="metrics-strip" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 hidden">
+            <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+                <p class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Ejecuciones</p>
+                <p id="m-total" class="text-2xl font-bold text-slate-900 mt-1">-</p>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+                <p class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Tasa de Éxito</p>
+                <p id="m-exito" class="text-2xl font-bold text-emerald-700 mt-1">-</p>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+                <p class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Latencia Promedio</p>
+                <p id="m-latencia" class="text-2xl font-bold text-slate-900 mt-1">-</p>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+                <p class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Última Ejecución</p>
+                <p id="m-ultima" class="text-lg font-bold text-slate-900 mt-1">-</p>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div id="chart-container" class="bg-white border border-slate-200 rounded-xl p-5 mb-8 shadow-xs hidden">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase">Alertas por Día</span>
+            </div>
+            <canvas id="metrics-chart" class="max-h-48"></canvas>
+        </div>
 
         <!-- Trigger -->
         <div class="bg-white border border-slate-200 rounded-xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xs">
@@ -41,8 +93,6 @@
 
         <!-- Pipeline -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-
-            <!-- Supervisor -->
             <div class="bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-between shadow-xs">
                 <div>
                     <div class="flex justify-between items-center mb-4">
@@ -60,8 +110,6 @@
                     <p id="txt-crudo" class="text-xs text-slate-700 bg-slate-50 p-2.5 rounded border border-slate-200 italic leading-relaxed"></p>
                 </div>
             </div>
-
-            <!-- Translator -->
             <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase">Workers Concurrentes</span>
@@ -93,8 +141,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Notifier -->
             <div class="bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-between shadow-xs">
                 <div>
                     <div class="flex justify-between items-center mb-4">
@@ -126,7 +172,56 @@
                     <div>Estado Final de Redución: <span id="m-status" class="text-slate-900 font-semibold">PENDIENTE</span></div>
                 </div>
             </div>
+        </div>
 
+        <!-- Scheduler + Monitoreo -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Scheduler -->
+            <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase">Programación Automática</span>
+                    <span id="badge-scheduler" class="text-[10px] font-bold font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-300">CUN-26</span>
+                </div>
+                <p class="text-xs text-slate-500 mb-4">El pipeline se ejecuta automáticamente en un intervalo definido.</p>
+                <div class="flex flex-wrap items-center gap-3">
+                    <input id="scheduler-interval" type="number" value="30" min="5" max="1440"
+                        class="w-20 text-sm border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 font-mono">
+                    <span class="text-xs text-slate-500 font-mono">minutos</span>
+                    <button id="btn-scheduler" onclick="toggleScheduler()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition cursor-pointer whitespace-nowrap">
+                        Iniciar
+                    </button>
+                </div>
+                <div id="scheduler-info" class="mt-3 text-[11px] font-mono text-slate-400 space-y-1">
+                    <p>Estado: <span id="sched-status" class="text-slate-600 font-semibold">Detenido</span></p>
+                    <p>Próxima ejecución: <span id="sched-next" class="text-slate-600">-</span></p>
+                </div>
+            </div>
+            <!-- Monitoreo -->
+            <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase">Monitoreo del Sistema</span>
+                    <span id="badge-monitor" class="text-[10px] font-bold font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-300">HEALTH</span>
+                </div>
+                <div class="space-y-2 text-[11px] font-mono">
+                    <div class="flex justify-between bg-slate-50 p-2 rounded border border-slate-200">
+                        <span class="text-slate-500">API Health</span>
+                        <span id="mon-health" class="text-emerald-700 font-semibold">✅ OK</span>
+                    </div>
+                    <div class="flex justify-between bg-slate-50 p-2 rounded border border-slate-200">
+                        <span class="text-slate-500">Pipeline Exitosos</span>
+                        <span id="mon-success" class="text-slate-900 font-semibold">-</span>
+                    </div>
+                    <div class="flex justify-between bg-slate-50 p-2 rounded border border-slate-200">
+                        <span class="text-slate-500">Pipeline Fallidos</span>
+                        <span id="mon-failed" class="text-slate-900 font-semibold">-</span>
+                    </div>
+                    <div class="flex justify-between bg-slate-50 p-2 rounded border border-slate-200">
+                        <span class="text-slate-500">Último Error</span>
+                        <span id="mon-last-error" class="text-slate-600 font-semibold text-right max-w-[200px] truncate">-</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Settings -->
@@ -162,21 +257,22 @@
 
         <!-- History + Query -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            <!-- History Table -->
             <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase">Historial de Ejecuciones</span>
-                    <button onclick="loadHistory()" class="text-[10px] font-mono bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-300 px-2 py-1 rounded transition cursor-pointer">
-                        Recargar
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="exportCSV()" class="text-[10px] font-mono bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300 px-2 py-1 rounded transition cursor-pointer">
+                            Exportar CSV
+                        </button>
+                        <button onclick="loadHistory()" class="text-[10px] font-mono bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-300 px-2 py-1 rounded transition cursor-pointer">
+                            Recargar
+                        </button>
+                    </div>
                 </div>
                 <div id="history-table" class="text-xs text-slate-400 font-mono">
                     <p>Cargando historial...</p>
                 </div>
             </div>
-
-            <!-- Query AI -->
             <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase">Consulta a la IA</span>
@@ -194,12 +290,13 @@
                     </button>
                 </div>
             </div>
-
         </div>
 
     </main>
 
     <script>
+        const API = '';
+
         function highlightToponymies(text) {
             const terms = ["Machu Picchu", "Ollantaytambo", "Sacsayhuamán", "Pisac", "Chinchero", "Urubamba", "Vallée Sacrée", "Vale Sagrado", "Sacred Valley"];
             let newText = text;
@@ -216,6 +313,88 @@
             el.innerText = text;
         }
 
+        // Auth
+        async function checkAuth() {
+            try {
+                const r = await fetch(API + '/api/auth/status');
+                const d = await r.json();
+                if (d.authenticated) {
+                    document.getElementById('login-overlay').classList.add('hidden');
+                    document.getElementById('btn-logout').classList.remove('hidden');
+                    document.getElementById('metrics-strip').classList.remove('hidden');
+                    document.getElementById('chart-container').classList.remove('hidden');
+                    loadDashboard();
+                }
+            } catch {}
+        }
+
+        async function doLogin() {
+            const pw = document.getElementById('login-password').value;
+            try {
+                const r = await fetch(API + '/api/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({password: pw})
+                });
+                if (r.ok) {
+                    document.getElementById('login-overlay').classList.add('hidden');
+                    document.getElementById('btn-logout').classList.remove('hidden');
+                    document.getElementById('login-error').classList.add('hidden');
+                    document.getElementById('metrics-strip').classList.remove('hidden');
+                    document.getElementById('chart-container').classList.remove('hidden');
+                    loadDashboard();
+                } else {
+                    document.getElementById('login-error').classList.remove('hidden');
+                }
+            } catch {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        }
+
+        async function doLogout() {
+            await fetch(API + '/api/logout', {method: 'POST'});
+            location.reload();
+        }
+
+        document.getElementById('login-password').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') doLogin();
+        });
+
+        // Dashboard
+        async function loadDashboard() {
+            loadMetrics();
+            loadHistory();
+            loadRecipients();
+            loadSchedulerStatus();
+            loadMonitoring();
+        }
+
+        async function loadMetrics() {
+            try {
+                const r = await fetch(API + '/api/metrics');
+                const d = await r.json();
+                document.getElementById('m-total').innerText = d.total_ejecuciones;
+                document.getElementById('m-exito').innerText = d.tasa_exito + '%';
+                document.getElementById('m-latencia').innerText = d.latencia_promedio_s + 's';
+                document.getElementById('m-ultima').innerText = d.ultima_ejecucion ? d.ultima_ejecucion.slice(0, 10) : '-';
+                const dias = Object.keys(d.alertas_por_dia);
+                if (dias.length && window.metricsChart) {
+                    window.metricsChart.data.labels = dias;
+                    window.metricsChart.data.datasets[0].data = Object.values(d.alertas_por_dia);
+                    window.metricsChart.update();
+                }
+            } catch {}
+        }
+
+        // Chart
+        const ctx = document.getElementById('metrics-chart').getContext('2d');
+        window.metricsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {labels: [], datasets: [{label: 'Alertas', data: [], backgroundColor: 'rgba(99,102,241,0.5)', borderColor: 'rgb(99,102,241)', borderWidth: 1}]},
+            options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}}, scales: {y: {beginAtZero: true, ticks: {stepSize: 1}}}}
+        });
+
+        // Pipeline
         async function runOrchestrator() {
             const startTime = performance.now();
             document.getElementById('btn-trigger').disabled = true;
@@ -236,17 +415,13 @@
             });
 
             try {
-                const response = await fetch('http://127.0.0.1:5000/api/orchestrate', { method: 'POST' });
+                const response = await fetch(API + '/api/orchestrate', { method: 'POST' });
+                if (response.status === 401) { doLogout(); return; }
                 const data = await response.json();
-
                 if (data.status === "error") throw new Error(data.message);
 
-                // Render supervisor
                 document.getElementById('alert-preview').classList.remove('hidden');
-                const textoRaw = data.texto_crudo || data.resumen_ia || '';
-                document.getElementById('txt-crudo').innerText = textoRaw;
-
-                // Render translations
+                document.getElementById('txt-crudo').innerText = data.texto_crudo || data.resumen_ia || '';
                 setBadge('badge-translator', 'COMPLETO', 'bg-slate-100 text-slate-700 border-slate-300');
 
                 const setLang = (statusId, textId, langData) => {
@@ -259,17 +434,12 @@
                         document.getElementById(statusId).innerText = "NO DISPONIBLE";
                     }
                 };
-
                 const trads = data.traducciones || {};
                 setLang('status-en', 'trans-en', trads.en);
                 setLang('status-fr', 'trans-fr', trads.fr);
                 setLang('status-pt', 'trans-pt', trads.pt);
-
                 logSup.innerHTML += `<div class="text-slate-600">[Supervisor] Integridad de traducciones verificada exitosamente.</div>`;
-
-                // Render notifier
                 setBadge('badge-notifier', 'TRANSMITIENDO', 'bg-emerald-50 text-emerald-700 border-emerald-200');
-
                 const despacho = data.despacho_status || {};
                 const smtpOk = despacho.smtp_intentos > 0;
                 const whatsappOk = despacho.whatsapp_intentos > 0;
@@ -283,7 +453,6 @@
                     document.getElementById('txt-whatsapp').className = "text-[11px] text-rose-700";
                     document.getElementById('txt-whatsapp').innerText = "Fallo en envío WhatsApp. Revisar credenciales Twilio.";
                 }
-
                 if (smtpOk) {
                     document.getElementById('row-smtp').className = "flex items-start gap-3 p-2.5 rounded-lg border border-emerald-100 bg-emerald-50/50";
                     document.getElementById('txt-smtp').className = "text-[11px] text-emerald-800 font-medium";
@@ -293,34 +462,31 @@
                     document.getElementById('txt-smtp').className = "text-[11px] text-rose-700";
                     document.getElementById('txt-smtp').innerText = "Fallo en envío SMTP. Revisar credenciales.";
                 }
-
                 setBadge('badge-notifier', 'COMPLETO', 'bg-emerald-50 text-emerald-700 border-emerald-200');
                 setBadge('badge-supervisor', 'FINALIZADO', 'bg-emerald-50 text-emerald-700 border-emerald-200');
-
                 logSup.innerHTML += `<div class="text-slate-900 font-semibold">[Supervisor] Persistencia completada en data/processed/. Pipeline cerrado.</div>`;
-
-                const endTime = performance.now();
-                const latency = data._latencia || ((endTime - startTime) / 1000).toFixed(2);
+                const latency = data._latencia || ((performance.now() - startTime) / 1000).toFixed(2);
                 document.getElementById('m-latency').innerText = latency + 's';
                 document.getElementById('m-status').className = "text-emerald-700 font-bold";
                 document.getElementById('m-status').innerText = (despacho.estado_final || 'PENDIENTE').toUpperCase();
-
             } catch (error) {
                 logSup.innerHTML += `<div class="text-rose-700 font-semibold">[Fallo] Excepción detectada en pipeline: ${error.message}</div>`;
                 setBadge('badge-supervisor', 'ERROR', 'bg-rose-50 text-rose-700 border-rose-200');
                 setBadge('badge-translator', 'ERROR', 'bg-rose-50 text-rose-700 border-rose-200');
             }
-
             document.getElementById('btn-trigger').disabled = false;
             document.getElementById('btn-trigger').classList.remove('opacity-50');
             loadHistory();
+            loadMetrics();
+            loadMonitoring();
         }
 
         // History
         async function loadHistory() {
             const container = document.getElementById('history-table');
             try {
-                const res = await fetch('http://127.0.0.1:5000/api/history');
+                const res = await fetch(API + '/api/history');
+                if (res.status === 401) { doLogout(); return; }
                 const entries = await res.json();
                 if (!entries.length) {
                     container.innerHTML = '<p class="text-slate-400">Sin ejecuciones registradas.</p>';
@@ -359,15 +525,13 @@
             const input = document.getElementById('query-input');
             const question = input.value.trim();
             if (!question) return;
-
             const log = document.getElementById('query-log');
             log.innerHTML += `<div class="text-slate-800 mt-2"><span class="font-bold">Tú:</span> ${question}</div>`;
             log.innerHTML += `<div class="text-slate-400"><span class="font-bold">IA:</span> Pensando...</div>`;
             log.scrollTop = log.scrollHeight;
             input.value = '';
-
             try {
-                const res = await fetch('http://127.0.0.1:5000/api/query', {
+                const res = await fetch(API + '/api/query', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({question})
@@ -377,7 +541,7 @@
                     '<div class="text-slate-400"><span class="font-bold">IA:</span> Pensando...</div>',
                     `<div class="text-slate-700"><span class="font-bold">IA:</span> ${highlightToponymies(data.answer)}</div>`
                 );
-            } catch (err) {
+            } catch {
                 log.innerHTML = log.innerHTML.replace(
                     '<div class="text-slate-400"><span class="font-bold">IA:</span> Pensando...</div>',
                     `<div class="text-rose-600"><span class="font-bold">IA:</span> Error de conexión.</div>`
@@ -385,7 +549,6 @@
             }
             log.scrollTop = log.scrollHeight;
         }
-
         document.getElementById('query-input').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') sendQuery();
         });
@@ -393,22 +556,23 @@
         // Recipients
         async function loadRecipients() {
             try {
-                const res = await fetch('http://127.0.0.1:5000/api/recipients');
+                const res = await fetch(API + '/api/recipients');
+                if (res.status === 401) return;
                 const data = await res.json();
                 document.getElementById('input-whatsapp').value = data.whatsapp || '';
                 document.getElementById('input-email').value = data.email || '';
             } catch {}
         }
-
         async function saveRecipients() {
             const whatsapp = document.getElementById('input-whatsapp').value.trim();
             const email = document.getElementById('input-email').value.trim();
             try {
-                const res = await fetch('http://127.0.0.1:5000/api/recipients', {
+                const res = await fetch(API + '/api/recipients', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({whatsapp, email})
                 });
+                if (res.status === 401) { doLogout(); return; }
                 const data = await res.json();
                 if (data.status === 'ok') {
                     document.getElementById('status-whatsapp').innerText = '✅ Guardado';
@@ -419,13 +583,64 @@
                     }, 3000);
                 }
             } catch {
-                document.getElementById('status-whatsapp').innerText = '❌ Error al guardar';
-                document.getElementById('status-email').innerText = '❌ Error al guardar';
+                document.getElementById('status-whatsapp').innerText = '❌ Error';
+                document.getElementById('status-email').innerText = '❌ Error';
             }
         }
 
-        loadHistory();
-        loadRecipients();
+        // Scheduler
+        async function loadSchedulerStatus() {
+            try {
+                const r = await fetch(API + '/api/scheduler/status');
+                if (r.status === 401) return;
+                const d = await r.json();
+                const running = d.running;
+                document.getElementById('sched-status').innerText = running ? 'Ejecutándose' : 'Detenido';
+                document.getElementById('sched-status').className = running ? 'text-emerald-700 font-bold' : 'text-slate-600 font-semibold';
+                document.getElementById('sched-next').innerText = d.next_run ? d.next_run.slice(0, 19).replace('T', ' ') : '-';
+                document.getElementById('btn-scheduler').innerText = running ? 'Detener' : 'Iniciar';
+                document.getElementById('btn-scheduler').className = running
+                    ? 'bg-rose-600 hover:bg-rose-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition cursor-pointer whitespace-nowrap'
+                    : 'bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition cursor-pointer whitespace-nowrap';
+                if (running) document.getElementById('scheduler-interval').value = d.interval_min || 30;
+            } catch {}
+        }
+
+        async function toggleScheduler() {
+            const btn = document.getElementById('btn-scheduler');
+            const running = btn.innerText === 'Detener';
+            const url = running ? '/api/scheduler/stop' : '/api/scheduler/start';
+            const opts = running ? {} : {interval: parseInt(document.getElementById('scheduler-interval').value) || 30};
+            try {
+                const r = await fetch(API + url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(opts)
+                });
+                if (r.status === 401) { doLogout(); return; }
+                loadSchedulerStatus();
+            } catch {}
+        }
+
+        // Monitoring
+        async function loadMonitoring() {
+            try {
+                const r = await fetch(API + '/api/monitoring');
+                if (r.status === 401) return;
+                const d = await r.json();
+                document.getElementById('mon-success').innerText = d.success || 0;
+                document.getElementById('mon-failed').innerText = d.failed || 0;
+                document.getElementById('mon-last-error').innerText = d.last_error ? d.last_error.message.slice(0, 40) + '...' : '-';
+            } catch {}
+        }
+
+        // Export
+        function exportCSV() {
+            window.open(API + '/api/export/csv', '_blank');
+        }
+
+        // Init
+        checkAuth();
     </script>
 </body>
 </html>
