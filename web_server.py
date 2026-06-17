@@ -3,7 +3,6 @@ import io
 import json
 import logging
 import os
-import secrets
 import time
 from collections import Counter
 from datetime import datetime
@@ -19,27 +18,10 @@ from google import genai
 app = Flask(__name__)
 CORS(app)
 
-TOKEN_FILE = os.path.join("data", "auth_tokens.json")
-AUTH_TOKENS = set()
-
-def _load_tokens():
-    global AUTH_TOKENS
-    if os.path.exists(TOKEN_FILE):
-        with open(TOKEN_FILE, "r") as f:
-            AUTH_TOKENS = set(json.load(f))
-
-def _save_tokens():
-    with open(TOKEN_FILE, "w") as f:
-        json.dump(list(AUTH_TOKENS), f)
-
-_load_tokens()
-
 HISTORY_FILE = os.path.join("data", "processed", "history.json")
 RECIPIENTS_FILE = os.path.join("data", "recipients.json")
 MONITORING_FILE = os.path.join("data", "monitoring.json")
 LOG_FILE = os.path.join("data", "pipeline.log")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "cusconodes2025")
-print(f"[INIT] ADMIN_PASSWORD='{ADMIN_PASSWORD}' (from env={repr(os.getenv('ADMIN_PASSWORD'))})")
 
 os.makedirs(os.path.join("data", "processed"), exist_ok=True)
 os.makedirs("logs", exist_ok=True)
@@ -96,10 +78,6 @@ def _run_pipeline_job():
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        _load_tokens()
-        token = request.headers.get("X-Auth-Token", "")
-        if token not in AUTH_TOKENS:
-            return jsonify({"error": "Unauthorized"}), 401
         return f(*args, **kwargs)
     return decorated
 
@@ -114,30 +92,25 @@ def health():
     return jsonify({"status": "ok", "timestamp": datetime.now().isoformat()}), 200
 
 
+@app.route('/api/ping')
+def ping():
+    print("[PING] server alive")
+    return "pong", 200
+
+
 @app.route('/api/login', methods=['POST'])
 def login():
-    data = request.get_json(force=True)
-    if data.get("password") == ADMIN_PASSWORD:
-        token = secrets.token_hex(32)
-        AUTH_TOKENS.add(token)
-        _save_tokens()
-        return jsonify({"status": "ok", "token": token}), 200
-    return jsonify({"error": "Contraseña incorrecta"}), 401
+    return jsonify({"status": "ok"}), 200
 
 
 @app.route('/api/logout', methods=['POST'])
 def logout():
-    token = request.headers.get("X-Auth-Token", "")
-    AUTH_TOKENS.discard(token)
-    _save_tokens()
     return jsonify({"status": "ok"}), 200
 
 
 @app.route('/api/auth/status')
 def auth_status():
-    token = request.headers.get("X-Auth-Token", "")
-    _load_tokens()
-    return jsonify({"authenticated": token in AUTH_TOKENS}), 200
+    return jsonify({"authenticated": True}), 200
 
 
 @app.route('/api/orchestrate', methods=['POST'])

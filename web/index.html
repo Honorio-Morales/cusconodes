@@ -14,24 +14,8 @@
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans min-h-screen antialiased">
 
-    <!-- Login Overlay -->
-    <div id="login-overlay" class="login-overlay">
-        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 w-full max-w-sm mx-4">
-            <div class="text-center mb-6">
-                <h1 class="text-xl font-bold tracking-tight text-slate-900">CUSCONODES</h1>
-                <p class="text-xs text-slate-500 mt-1 font-mono">Panel de Administración</p>
-            </div>
-            <div class="space-y-4">
-                <input id="login-password" type="password" placeholder="Contraseña de administrador"
-                    class="w-full text-sm border border-slate-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 font-mono">
-                <button onclick="doLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm px-5 py-2.5 rounded-lg transition cursor-pointer">
-                    Ingresar
-                </button>
-                <p id="login-error" class="text-xs text-rose-600 font-mono text-center hidden">Contraseña incorrecta</p>
-            </div>
-            <p class="text-[10px] text-slate-400 text-center mt-6 font-mono">Patrocinador: Israel Rondán | Grupo HABA</p>
-        </div>
-    </div>
+    <!-- Login Overlay (disabled - public access) -->
+    <div id="login-overlay" class="login-overlay hidden"></div>
 
     <header class="border-b border-slate-200 bg-white/80 backdrop-blur sticky top-0 z-50 px-8 py-4 flex justify-between items-center shadow-xs">
         <div>
@@ -296,15 +280,7 @@
 
     <script>
         const API = '';
-        function api(url, opts) {
-            opts = opts || {};
-            const token = localStorage.getItem('auth_token');
-            if (token) {
-                opts.headers = opts.headers || {};
-                opts.headers['X-Auth-Token'] = token;
-            }
-            return fetch(API + url, opts);
-        }
+        function api(url, opts) { opts = opts || {}; return fetch(API + url, opts); }
 
         function highlightToponymies(text) {
             const terms = ["Machu Picchu", "Ollantaytambo", "Sacsayhuamán", "Pisac", "Chinchero", "Urubamba", "Vallée Sacrée", "Vale Sagrado", "Sacred Valley"];
@@ -324,63 +300,15 @@
 
         // Auth
         async function checkAuth() {
-            try {
-                const r = await api('/api/auth/status');
-                console.log('checkAuth: status=', r.status);
-                if (!r.ok) { console.log('checkAuth: response not ok'); return; }
-                const d = await r.json();
-                console.log('checkAuth: body=', JSON.stringify(d));
-                console.log('checkAuth: cookies=', document.cookie);
-                if (d.authenticated) {
-                    document.getElementById('login-overlay').classList.add('hidden');
-                    document.getElementById('btn-logout').classList.remove('hidden');
-                    document.getElementById('metrics-strip').classList.remove('hidden');
-                    document.getElementById('chart-container').classList.remove('hidden');
-                    loadDashboard();
-                } else {
-                    console.log('checkAuth: NO autenticado');
-                }
-            } catch (e) { console.warn('checkAuth fallo', e); }
-        }
-
-        async function doLogin() {
-            const btn = document.querySelector('#login-overlay button');
-            const pw = document.getElementById('login-password').value;
-            btn.disabled = true; btn.innerText = 'Ingresando...';
-            try {
-                const r = await api('/api/login', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({password: pw})
-                });
-                if (r.ok) {
-                    const data = await r.json();
-                    localStorage.setItem('auth_token', data.token);
-                    document.getElementById('login-overlay').classList.add('hidden');
-                    document.getElementById('btn-logout').classList.remove('hidden');
-                    document.getElementById('metrics-strip').classList.remove('hidden');
-                    document.getElementById('chart-container').classList.remove('hidden');
-                    loadDashboard();
-                } else {
-                    btn.innerText = 'Error ' + r.status;
-                    btn.disabled = false;
-                }
-            } catch (e) {
-                console.error('doLogin: catch', e);
-                btn.innerText = 'Error red';
-                btn.disabled = false;
-            }
+            document.getElementById('btn-logout').classList.add('hidden');
+            document.getElementById('metrics-strip').classList.remove('hidden');
+            document.getElementById('chart-container').classList.remove('hidden');
+            loadDashboard();
         }
 
         async function doLogout() {
-            await api('/api/logout', {method: 'POST'});
-            localStorage.removeItem('auth_token');
             location.reload();
         }
-
-        document.getElementById('login-password').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') doLogin();
-        });
 
         // Dashboard
         async function loadDashboard() {
